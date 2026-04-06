@@ -15,12 +15,17 @@ const GMAIL_PASSWORD = process.env.GMAIL_PASSWORD || '';
 const SESSION_SECRET = process.env.SESSION_SECRET || 'salsify-secret-change-me';
 
 // ─── Middlewares ──────────────────────────────────────────────────────────────
+app.set('trust proxy', 1); // nécessaire derrière le proxy Render
 app.use(express.json());
 app.use(session({
   secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 8 * 60 * 60 * 1000 } // session 8h
+  cookie: {
+    maxAge: 8 * 60 * 60 * 1000, // session 8h
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax'
+  }
 }));
 
 // ─── Auth middleware ──────────────────────────────────────────────────────────
@@ -55,6 +60,10 @@ app.post('/api/logout', (req, res) => {
 // ─── Protection de toutes les routes suivantes ────────────────────────────────
 app.use(requireAuth);
 app.use(express.static(path.join(__dirname)));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 // ─── Config serveur (Gmail pré-configuré ?) ───────────────────────────────────
 app.get('/api/config', (req, res) => {
