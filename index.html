@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Email Salsify – Envoi Fournisseurs</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+
+    header {
+      background: linear-gradient(135deg, #1a73e8, #0d47a1);
+      color: white; padding: 18px 40px;
+      display: flex; align-items: center; gap: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    header h1 { font-size: 20px; font-weight: 600; }
+    header p  { font-size: 13px; opacity: .85; margin-top: 2px; }
+
+    .container { max-width: 1100px; margin: 28px auto; padding: 0 20px 60px; }
+
+    .card {
+      background: white; border-radius: 12px;
+      padding: 26px 30px; margin-bottom: 22px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+    .card h2 {
+      font-size: 15px; font-weight: 700; color: #1a73e8;
+      margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+    }
+
+    .form-row { display: flex; gap: 14px; margin-bottom: 12px; flex-wrap: wrap; }
+    .form-group { flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 5px; }
+    label { font-size: 12px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: .4px; }
+
+    input[type="email"], input[type="password"], input[type="text"], textarea, select {
+      border: 1.5px solid #dde1e7; border-radius: 8px;
+      padding: 9px 13px; font-size: 14px; font-family: inherit;
+      outline: none; transition: border-color .2s; width: 100%;
+    }
+    input:focus, textarea:focus { border-color: #1a73e8; box-shadow: 0 0 0 3px rgba(26,115,232,.1); }
+    textarea { resize: vertical; min-height: 80px; }
+
+    .hint { font-size: 12px; color: #999; margin-top: 3px; }
+    .hint a { color: #1a73e8; cursor: pointer; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 9px 18px; border-radius: 8px; font-size: 13px;
+      font-weight: 600; cursor: pointer; border: none; transition: all .18s;
+      white-space: nowrap;
+    }
+    .btn-primary  { background: #1a73e8; color: white; }
+    .btn-primary:hover  { background: #1558b0; }
+    .btn-secondary{ background: #f1f3f4; color: #444; }
+    .btn-secondary:hover{ background: #e2e5e9; }
+    .btn-success  { background: #34a853; color: white; }
+    .btn-success:hover  { background: #2d9249; }
+    .btn-warning  { background: #fbbc04; color: #333; }
+    .btn-warning:hover  { background: #f0a800; }
+    .btn-danger   { background: #ea4335; color: white; }
+    .btn-danger:hover   { background: #c5221f; }
+    .btn-sm { padding: 5px 11px; font-size: 12px; }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+    .tag-connected {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #e6f4ea; color: #2d9249;
+      border-radius: 20px; padding: 4px 12px; font-size: 13px; font-weight: 500;
+    }
+
+    /* Zone import */
+    .import-zone {
+      border: 2px dashed #c5d0e0; border-radius: 10px;
+      padding: 22px; text-align: center; color: #888;
+      cursor: pointer; transition: border-color .2s, background .2s; margin-bottom: 16px;
+    }
+    .import-zone:hover { border-color: #1a73e8; background: #f0f6ff; }
+    .import-zone input { display: none; }
+
+    /* Tableau */
+    .tbl-wrap { overflow-x: auto; margin-top: 16px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th {
+      background: #f8f9fa; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; color: #666; padding: 10px 12px;
+      text-align: left; border-bottom: 2px solid #e9ecef; white-space: nowrap;
+    }
+    tbody td { padding: 11px 12px; border-bottom: 1px solid #f0f2f5; vertical-align: middle; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: #fafbff; }
+
+    .email-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      border-radius: 20px; padding: 2px 9px; font-size: 12px; font-weight: 500;
+    }
+    .chip-blue   { background: #e8f0fe; color: #1a73e8; }
+    .chip-green  { background: #e6f4ea; color: #2d9249; }
+    .chip-orange { background: #fff3e0; color: #e65100; }
+    .chip-ean    { background: #f3e8ff; color: #7b1fa2; font-family: monospace; }
+
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 700;
+    }
+    .s-pending  { background: #fef3c7; color: #b45309; }
+    .s-success  { background: #d1fae5; color: #065f46; }
+    .s-error    { background: #fee2e2; color: #991b1b; }
+    .s-sending  { background: #dbeafe; color: #1e40af; }
+
+    /* Formulaire ajout / édition */
+    .form-panel {
+      background: #f8f9fa; border-radius: 10px;
+      padding: 20px; margin-bottom: 18px;
+      border: 1.5px solid #e9ecef;
+    }
+    .form-panel h3 { font-size: 14px; font-weight: 600; margin-bottom: 14px; color: #333; }
+
+    .emails-input-wrap { position: relative; }
+    .emails-tags-box {
+      border: 1.5px solid #dde1e7; border-radius: 8px;
+      padding: 7px 10px; display: flex; flex-wrap: wrap;
+      gap: 6px; cursor: text; min-height: 42px; align-items: center;
+      transition: border-color .2s;
+    }
+    .emails-tags-box:focus-within { border-color: #1a73e8; box-shadow: 0 0 0 3px rgba(26,115,232,.1); }
+    .emails-tags-box .chip { cursor: default; }
+    .emails-tags-box .chip span { cursor: pointer; margin-left: 4px; opacity: .6; }
+    .emails-tags-box .chip span:hover { opacity: 1; }
+    .emails-tags-box input {
+      border: none; outline: none; padding: 2px 4px;
+      font-size: 13px; flex: 1; min-width: 160px;
+      box-shadow: none; background: transparent;
+    }
+
+    /* Progress */
+    .progress-wrap { margin-top: 18px; display: none; }
+    .progress-bar-bg {
+      background: #e9ecef; border-radius: 20px; height: 10px; overflow: hidden;
+    }
+    .progress-bar-fill {
+      background: linear-gradient(90deg, #1a73e8, #34a853);
+      height: 100%; border-radius: 20px; transition: width .4s ease;
+    }
+    .progress-label { font-size: 13px; color: #555; margin-top: 8px; }
+
+    /* Modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.5); z-index: 100;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: white; border-radius: 14px;
+      width: 92%; max-width: 720px; max-height: 88vh;
+      overflow-y: auto; padding: 28px 32px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+    .modal-header h3 { font-size: 16px; color: #1a73e8; }
+    .modal-close { cursor: pointer; font-size: 20px; color: #999; background: none; border: none; }
+    .modal-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+
+    .pf { margin-bottom: 14px; }
+    .pf label { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; display: block; margin-bottom: 4px; }
+    .pf .val {
+      background: #f8f9fa; border-radius: 8px;
+      padding: 10px 14px; font-size: 13px;
+      white-space: pre-wrap; line-height: 1.7; font-family: 'Segoe UI', sans-serif;
+    }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+    /* Résumé */
+    #sendSummary { margin-top: 18px; }
+    .summary-box {
+      border-radius: 10px; padding: 14px 18px;
+      font-size: 14px; line-height: 1.8;
+    }
+    .summary-ok  { background: #d1fae5; color: #065f46; }
+    .summary-err { background: #fee2e2; color: #991b1b; }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 28px; right: 28px;
+      background: #323232; color: white;
+      padding: 12px 20px; border-radius: 10px;
+      font-size: 14px; z-index: 200;
+      opacity: 0; transform: translateY(16px); transition: all .3s;
+      max-width: 380px;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { background: #34a853; }
+    .toast.error   { background: #ea4335; }
+
+    .actions-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 16px; }
+    .spacer { flex: 1; }
+
+    @media (max-width: 640px) {
+      .form-row { flex-direction: column; }
+      .modal { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div style="font-size:26px;">📧</div>
+  <div style="flex:1;">
+    <h1>Email Salsify – Envoi Fournisseurs</h1>
+    <p>Génération & envoi automatique d'emails de relance Salsify pour Carrefour.fr</p>
+  </div>
+  <button onclick="logout()" style="background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer;font-weight:600;">
+    🚪 Déconnexion
+  </button>
+</header>
+
+<div class="container">
+
+  <!-- ── ÉTAPE 1 : Connexion Gmail ────────────────────────────────────────── -->
+  <div class="card">
+    <h2>⚙️ Étape 1 — Connexion Gmail</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Adresse Gmail professionnelle</label>
+        <input type="email" id="senderEmail" placeholder="prenom.nom@gmail.com" />
+      </div>
+      <div class="form-group">
+        <label>Mot de passe d'application Google</label>
+        <input type="password" id="senderPassword" placeholder="xxxx xxxx xxxx xxxx" />
+        <span class="hint"><a onclick="showAppPasswordGuide()">Comment obtenir un mot de passe d'application ?</a></span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;margin-top:4px;">
+      <button class="btn btn-secondary" onclick="testConnection()">🔌 Tester la connexion</button>
+      <span id="connectionStatus"></span>
+    </div>
+  </div>
+
+  <!-- ── ÉTAPE 2 : Fournisseurs ───────────────────────────────────────────── -->
+  <div class="card">
+    <h2>📋 Étape 2 — Données fournisseurs</h2>
+
+    <!-- Import -->
+    <label class="import-zone" id="importZone">
+      <input type="file" id="fileInput" accept=".csv,.txt,.xlsx,.xls" onchange="importFile(event)" />
+      <div style="font-size:30px;margin-bottom:6px;">📂</div>
+      <div style="font-weight:600;margin-bottom:4px;">Glissez un fichier ou cliquez pour importer</div>
+      <div style="font-size:12px;">Excel (.xlsx .xls) ou CSV — colonnes : Nom fournisseur | Email(s) | EAN</div>
+    </label>
+
+    <div style="text-align:center;color:#bbb;margin-bottom:16px;font-size:13px;">— ou ajout manuel —</div>
+
+    <!-- Formulaire ajout/édition -->
+    <div class="form-panel" id="formPanel">
+      <h3 id="formTitle">➕ Nouveau fournisseur</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nom fournisseur *</label>
+          <input type="text" id="fNom" placeholder="Ex : DUPONT SAS" />
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:12px;">
+        <label>Adresses email (plusieurs possibles) *</label>
+        <div class="emails-tags-box" id="emailsBox" onclick="focusEmailInput()">
+          <input type="text" id="emailInput" placeholder="Tapez un email puis Entrée…"
+            onkeydown="handleEmailKey(event)" onblur="addEmailFromInput()" />
+        </div>
+        <span class="hint">Appuyez sur Entrée ou virgule pour valider chaque adresse. Vous pouvez en ajouter plusieurs.</span>
+      </div>
+
+      <div class="form-group" style="margin-bottom:12px;">
+        <label>CC (optionnel)</label>
+        <div class="emails-tags-box" id="ccBox" onclick="focusCcInput()">
+          <input type="text" id="ccInput" placeholder="Adresse(s) en copie…"
+            onkeydown="handleCcKey(event)" onblur="addCcFromInput()" />
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:14px;">
+        <label>EAN (un par ligne ou séparés par virgule) *</label>
+        <textarea id="fEans" placeholder="3760000000001&#10;3760000000002&#10;3760000000003"></textarea>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="saveSupplier()">💾 Enregistrer</button>
+        <button class="btn btn-secondary" onclick="cancelEdit()">Annuler</button>
+      </div>
+    </div>
+
+    <!-- Tableau fournisseurs -->
+    <div id="tableWrap" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+        <span id="supplierCount" style="font-size:13px;color:#666;"></span>
+        <button class="btn btn-danger btn-sm" onclick="clearAll()">🗑️ Tout effacer</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Fournisseur</th>
+              <th>Destinataires (To)</th>
+              <th>CC</th>
+              <th>EAN</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="supplierBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ÉTAPE 3 : Envoi ─────────────────────────────────────────────────── -->
+  <div class="card">
+    <h2>🚀 Étape 3 — Prévisualisation & Envoi</h2>
+    <p style="font-size:13px;color:#666;margin-bottom:16px;">
+      Vérifiez les emails générés avant l'envoi. Chaque email sera personnalisé avec le nom du fournisseur et ses EAN.
+    </p>
+    <div class="actions-bar">
+      <button class="btn btn-secondary" onclick="previewAll()">👁️ Prévisualiser</button>
+      <button class="btn btn-success" id="btnSend" onclick="sendAll()">📤 Envoyer tous les emails</button>
+    </div>
+
+    <!-- Barre de progression -->
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar" style="width:0%"></div></div>
+      <div class="progress-label" id="progressLabel">Envoi en cours…</div>
+    </div>
+
+    <div id="sendSummary"></div>
+  </div>
+
+</div>
+
+<!-- ── Modal prévisualisation ─────────────────────────────────────────────── -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Prévisualisation</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-nav" id="modalNav"></div>
+    <div id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- SheetJS pour Excel -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+
+<script>
+  // ─── État ──────────────────────────────────────────────────────────────────
+  let suppliers = JSON.parse(localStorage.getItem('salsify_suppliers') || '[]');
+  let editIndex = -1;
+  let currentEmails = [];
+  let currentCcs    = [];
+  let previewIdx    = 0;
+
+  // Init
+  renderTable();
+  checkServerConfig();
+
+  async function checkServerConfig() {
+    try {
+      const res  = await fetch('/api/config');
+      const data = await res.json();
+      if (data.gmailConfigured) {
+        el('senderEmail').value = data.gmailUser;
+        el('senderEmail').disabled = true;
+        el('senderPassword').value = '••••••••••••••••';
+        el('senderPassword').disabled = true;
+        el('connectionStatus').innerHTML = '<span class="tag-connected">✅ Gmail configuré via serveur</span>';
+        toast('Gmail pré-configuré côté serveur.', 'success');
+      }
+    } catch {}
+  }
+
+  async function logout() {
+    await fetch('/api/logout', { method: 'POST' });
+    window.location.href = '/login';
+  }
+
+  // ─── Connexion Gmail ───────────────────────────────────────────────────────
+  async function testConnection() {
+    const email    = v('senderEmail');
+    const password = v('senderPassword');
+    if (!email || !password) { toast('Renseignez email et mot de passe.', 'error'); return; }
+    el('connectionStatus').innerHTML = '<span style="color:#888;font-size:13px;">Vérification…</span>';
+    try {
+      const res  = await post('/api/test-connection', { email, password });
+      const data = await res.json();
+      el('connectionStatus').innerHTML = data.success
+        ? `<span class="tag-connected">✅ ${data.message}</span>`
+        : `<span style="color:#ea4335;font-size:13px;">❌ ${data.message}</span>`;
+      toast(data.message, data.success ? 'success' : 'error');
+    } catch { toast('Impossible de contacter le serveur.', 'error'); }
+  }
+
+  // ─── Gestion emails tag-input ──────────────────────────────────────────────
+  function focusEmailInput() { el('emailInput').focus(); }
+  function focusCcInput()    { el('ccInput').focus(); }
+
+  function handleEmailKey(e) {
+    if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addEmailFromInput(); }
+    if (e.key === 'Backspace' && !el('emailInput').value && currentEmails.length) {
+      currentEmails.pop(); renderEmailTags();
+    }
+  }
+  function handleCcKey(e) {
+    if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addCcFromInput(); }
+    if (e.key === 'Backspace' && !el('ccInput').value && currentCcs.length) {
+      currentCcs.pop(); renderCcTags();
+    }
+  }
+
+  function addEmailFromInput() {
+    const val = el('emailInput').value.trim().replace(/,/g, '');
+    if (val && isEmail(val) && !currentEmails.includes(val)) {
+      currentEmails.push(val); renderEmailTags();
+    } else if (val && !isEmail(val)) {
+      toast('Email invalide : ' + val, 'error');
+    }
+    el('emailInput').value = '';
+  }
+  function addCcFromInput() {
+    const val = el('ccInput').value.trim().replace(/,/g, '');
+    if (val && isEmail(val) && !currentCcs.includes(val)) {
+      currentCcs.push(val); renderCcTags();
+    }
+    el('ccInput').value = '';
+  }
+
+  function removeEmail(i) { currentEmails.splice(i, 1); renderEmailTags(); }
+  function removeCc(i)    { currentCcs.splice(i, 1);    renderCcTags();    }
+
+  function renderEmailTags() {
+    const box = el('emailsBox');
+    const input = el('emailInput');
+    box.innerHTML = '';
+    currentEmails.forEach((e, i) => {
+      const chip = document.createElement('span');
+      chip.className = 'chip chip-blue';
+      chip.innerHTML = `${e} <span onclick="removeEmail(${i})">✕</span>`;
+      box.appendChild(chip);
+    });
+    box.appendChild(input);
+  }
+  function renderCcTags() {
+    const box = el('ccBox');
+    const input = el('ccInput');
+    box.innerHTML = '';
+    currentCcs.forEach((e, i) => {
+      const chip = document.createElement('span');
+      chip.className = 'chip chip-orange';
+      chip.innerHTML = `${e} <span onclick="removeCc(${i})">✕</span>`;
+      box.appendChild(chip);
+    });
+    box.appendChild(input);
+  }
+
+  // ─── Ajout / édition fournisseur ───────────────────────────────────────────
+  function saveSupplier() {
+    addEmailFromInput();
+    addCcFromInput();
+
+    const nom  = v('fNom').trim();
+    const eans = v('fEans').split(/[\n,;]+/).map(e => e.trim()).filter(Boolean);
+
+    if (!nom)              { toast('Le nom est obligatoire.', 'error'); return; }
+    if (!currentEmails.length) { toast('Ajoutez au moins une adresse email.', 'error'); return; }
+    if (!eans.length)      { toast('Ajoutez au moins un EAN.', 'error'); return; }
+
+    const supplier = { nom_fournisseur: nom, emails: [...currentEmails], ccs: [...currentCcs], eans, status: 'pending' };
+
+    if (editIndex >= 0) {
+      supplier.status = suppliers[editIndex].status;
+      suppliers[editIndex] = supplier;
+      toast(`${nom} mis à jour.`, 'success');
+    } else {
+      suppliers.push(supplier);
+      toast(`${nom} ajouté.`, 'success');
+    }
+
+    saveLocal();
+    renderTable();
+    cancelEdit();
+  }
+
+  function editSupplier(i) {
+    editIndex = i;
+    const s = suppliers[i];
+    el('fNom').value  = s.nom_fournisseur;
+    el('fEans').value = s.eans.join('\n');
+    currentEmails = [...s.emails];
+    currentCcs    = [...(s.ccs || [])];
+    renderEmailTags();
+    renderCcTags();
+    el('formTitle').textContent = '✏️ Modifier le fournisseur';
+    el('formPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function cancelEdit() {
+    editIndex = -1;
+    el('fNom').value  = '';
+    el('fEans').value = '';
+    currentEmails = [];
+    currentCcs    = [];
+    renderEmailTags();
+    renderCcTags();
+    el('formTitle').textContent = '➕ Nouveau fournisseur';
+  }
+
+  function removeSupplier(i) {
+    if (!confirm(`Supprimer "${suppliers[i].nom_fournisseur}" ?`)) return;
+    suppliers.splice(i, 1);
+    saveLocal();
+    renderTable();
+  }
+
+  function clearAll() {
+    if (!confirm('Effacer tous les fournisseurs ?')) return;
+    suppliers = [];
+    saveLocal();
+    renderTable();
+  }
+
+  // ─── Import fichier ────────────────────────────────────────────────────────
+  function importFile(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (ext === 'xlsx' || ext === 'xls') importExcel(file);
+    else importCSV(file);
+  }
+
+  function importExcel(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const wb    = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows  = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+      let added = 0;
+      for (const row of rows) {
+        if (row.length < 2) continue;
+        const nom    = String(row[0]).trim();
+        const emailR = String(row[1]).trim();
+        const eanR   = String(row[2] || '').trim();
+        if (!nom || nom.toLowerCase().startsWith('nom') || !emailR) continue;
+        const emails = emailR.split(/[,;]+/).map(e => e.trim()).filter(isEmail);
+        const eans   = eanR.split(/[,;\s\n]+/).map(e => e.trim()).filter(Boolean);
+        if (nom && emails.length && eans.length) {
+          suppliers.push({ nom_fournisseur: nom, emails, ccs: [], eans, status: 'pending' });
+          added++;
+        }
+      }
+      saveLocal(); renderTable();
+      toast(`${added} fournisseur(s) importé(s) depuis Excel.`, 'success');
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function importCSV(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const lines = e.target.result.split('\n').filter(l => l.trim());
+      let added = 0;
+      for (const line of lines) {
+        if (/nom.fournisseur|nom fournisseur/i.test(line)) continue;
+        const parts  = line.split(/[;|]/).map(p => p.replace(/^"|"$/g, '').trim());
+        if (parts.length < 2) continue;
+        const nom    = parts[0];
+        const emails = parts[1].split(',').map(e => e.trim()).filter(isEmail);
+        const eans   = (parts.slice(2).join(',') || '').split(/[,\s]+/).map(e => e.trim()).filter(Boolean);
+        if (nom && emails.length && eans.length) {
+          suppliers.push({ nom_fournisseur: nom, emails, ccs: [], eans, status: 'pending' });
+          added++;
+        }
+      }
+      saveLocal(); renderTable();
+      toast(`${added} fournisseur(s) importé(s).`, 'success');
+    };
+    reader.readAsText(file, 'UTF-8');
+  }
+
+  // ─── Rendu tableau ─────────────────────────────────────────────────────────
+  function renderTable() {
+    const wrap = el('tableWrap');
+    if (!suppliers.length) { wrap.style.display = 'none'; return; }
+    wrap.style.display = 'block';
+    el('supplierCount').textContent = `${suppliers.length} fournisseur(s)`;
+
+    el('supplierBody').innerHTML = suppliers.map((s, i) => `
+      <tr>
+        <td style="color:#aaa;font-weight:600;">${i + 1}</td>
+        <td><strong>${s.nom_fournisseur}</strong></td>
+        <td>
+          <div class="email-chips">
+            ${s.emails.map(e => `<span class="chip chip-blue">${e}</span>`).join('')}
+          </div>
+        </td>
+        <td>
+          <div class="email-chips">
+            ${(s.ccs||[]).map(e => `<span class="chip chip-orange">${e}</span>`).join('') || '<span style="color:#ccc;font-size:12px;">—</span>'}
+          </div>
+        </td>
+        <td>
+          <div class="email-chips">
+            ${s.eans.slice(0,3).map(e => `<span class="chip chip-ean">${e}</span>`).join('')}
+            ${s.eans.length > 3 ? `<span class="chip chip-ean">+${s.eans.length - 3}</span>` : ''}
+          </div>
+        </td>
+        <td>${badge(s.status, s.error)}</td>
+        <td>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;">
+            <button class="btn btn-secondary btn-sm" onclick="previewOne(${i})">👁</button>
+            <button class="btn btn-warning btn-sm"   onclick="sendOne(${i})">📤</button>
+            <button class="btn btn-secondary btn-sm" onclick="editSupplier(${i})">✏️</button>
+            <button class="btn btn-danger btn-sm"    onclick="removeSupplier(${i})">✕</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function badge(status, error) {
+    const map = {
+      pending: '<span class="status-badge s-pending">⏳ En attente</span>',
+      success: '<span class="status-badge s-success">✅ Envoyé</span>',
+      error:   `<span class="status-badge s-error" title="${error||''}">❌ Erreur</span>`,
+      sending: '<span class="status-badge s-sending">📤 Envoi…</span>',
+    };
+    return map[status] || '';
+  }
+
+  // ─── Génération email ──────────────────────────────────────────────────────
+  function generateEmail(s) {
+    const eanList = s.eans.map(e => `• ${e}`).join('\n');
+    const subject = `${s.nom_fournisseur} Mise en ligne bloquée : fiches produits en attente de partage à finaliser pour Carrefour.fr dans Salsify`;
+    const body = `Bonjour,
+
+Nous sommes actuellement dans l'attente de la complétion et de l'enrichissement des fiches produits pour les EAN mentionnés ci-dessous sur la plateforme Salsify.
+
+Ces références, à fort enjeu et à caractère innovant, nécessitent une mise à jour rapide. À défaut d'action de votre part, leur mise en ligne sur Carrefour.fr ne pourra être envisagée, ce qui limiterait leur visibilité et leur potentiel de performance.
+
+Pour rappel, les visuels attendus dans Salsify doivent impérativement respecter les critères suivants :
+
+• Photos du produit emballé : vue de face (parallèle) et vue de dos (avec liste d'ingrédients lisible)
+• Visuel détouré sur fond blanc ou transparent
+• Format « produit emballé »
+• Résolution minimale de 1500 pixels sur l'un des côtés (format JPEG)
+• Poids maximal : 2 Mo
+
+EAN en attente de traitement :
+
+${eanList}
+
+Nous vous remercions de bien vouloir partager et finaliser l'ensemble de ces fiches produits dans les meilleurs délais sur Salsify, en vue de leur intégration sur Carrefour.fr.
+
+Pour toute question technique relative à la plateforme Salsify, vous pouvez contacter leur support à l'adresse suivante :
+📧 help.sxm@salsify.com
+
+Je reste également à votre disposition au 01.64.50.87.43.
+
+Merci par avance pour votre réactivité et votre collaboration.
+
+Excellente journée à vous.`;
+    return { subject, body };
+  }
+
+  // ─── Prévisualisation ──────────────────────────────────────────────────────
+  function previewOne(i) { previewIdx = i; showPreview(); }
+  function previewAll()  {
+    if (!suppliers.length) { toast('Aucun fournisseur.', 'error'); return; }
+    previewIdx = 0; showPreview();
+  }
+
+  function showPreview() {
+    const s = suppliers[previewIdx];
+    const { subject, body } = generateEmail(s);
+    const total = suppliers.length;
+    el('modalTitle').textContent = `Prévisualisation — ${s.nom_fournisseur}`;
+
+    el('modalNav').innerHTML = total > 1 ? `
+      <button class="btn btn-secondary btn-sm" onclick="navPrev()" ${previewIdx===0?'disabled':''}>◀</button>
+      <span style="font-size:13px;color:#666;">${previewIdx+1} / ${total}</span>
+      <button class="btn btn-secondary btn-sm" onclick="navNext()" ${previewIdx===total-1?'disabled':''}>▶</button>
+    ` : '';
+
+    el('modalBody').innerHTML = `
+      <div class="pf"><label>Destinataires (To)</label>
+        <div class="val">${s.emails.join('\n')}</div></div>
+      ${s.ccs?.length ? `<div class="pf"><label>CC</label><div class="val">${s.ccs.join('\n')}</div></div>` : ''}
+      <div class="pf"><label>Objet</label><div class="val">${subject}</div></div>
+      <div class="pf"><label>Corps</label><div class="val">${body}</div></div>
+    `;
+    el('modalOverlay').classList.add('open');
+  }
+
+  function navPrev() { previewIdx = Math.max(0, previewIdx - 1); showPreview(); }
+  function navNext() { previewIdx = Math.min(suppliers.length - 1, previewIdx + 1); showPreview(); }
+  function closeModal() { el('modalOverlay').classList.remove('open'); }
+
+  // ─── Envoi ─────────────────────────────────────────────────────────────────
+  async function sendOne(i) {
+    const sEmail = v('senderEmail'), sPwd = v('senderPassword');
+    if (!sEmail || !sPwd) { toast('Configurez la connexion Gmail d\'abord.', 'error'); return; }
+    suppliers[i].status = 'sending';
+    renderTable();
+    const result = await sendRequest(sEmail, sPwd, [suppliers[i]]);
+    applyResults(result);
+  }
+
+  async function sendAll() {
+    const sEmail = v('senderEmail'), sPwd = v('senderPassword');
+    if (!sEmail || !sPwd) { toast('Configurez la connexion Gmail d\'abord.', 'error'); return; }
+    const pending = suppliers.filter(s => s.status !== 'success');
+    if (!pending.length) { toast('Tous les emails ont déjà été envoyés.', 'success'); return; }
+    if (!confirm(`Envoyer ${pending.length} email(s) ?`)) return;
+
+    el('btnSend').disabled = true;
+    suppliers.forEach(s => { if (s.status !== 'success') s.status = 'sending'; });
+    renderTable();
+
+    // Barre de progression
+    showProgress(0, pending.length);
+
+    const results = [];
+    for (let idx = 0; idx < pending.length; idx++) {
+      const r = await sendRequest(sEmail, sPwd, [pending[idx]]);
+      results.push(...(r || []));
+      applyResults(r, false);
+      showProgress(idx + 1, pending.length);
+    }
+
+    el('progressWrap').style.display = 'none';
+    el('btnSend').disabled = false;
+    saveLocal();
+    renderTable();
+
+    const ok  = results.filter(r => r.status === 'success').length;
+    const err = results.filter(r => r.status === 'error').length;
+    el('sendSummary').innerHTML = `
+      <div class="summary-box ${err ? 'summary-err' : 'summary-ok'}">
+        ✅ ${ok} email(s) envoyé(s) avec succès${err ? ` — ❌ ${err} erreur(s)` : ''}
+        ${err ? '<br><small>Vérifiez les lignes en erreur dans le tableau.</small>' : ''}
+      </div>`;
+    toast(`${ok} email(s) envoyé(s).`, ok > 0 ? 'success' : 'error');
+  }
+
+  async function sendRequest(sEmail, sPwd, list) {
+    try {
+      const res  = await post('/api/send-emails', { senderEmail: sEmail, senderPassword: sPwd, suppliers: list });
+      const data = await res.json();
+      return data.results || [];
+    } catch { return list.map(s => ({ nom_fournisseur: s.nom_fournisseur, emails: s.emails, status: 'error', error: 'Erreur réseau' })); }
+  }
+
+  function applyResults(results, save = true) {
+    (results || []).forEach(r => {
+      const s = suppliers.find(s => s.nom_fournisseur === r.nom_fournisseur);
+      if (s) { s.status = r.status; s.error = r.error; }
+    });
+    if (save) saveLocal();
+    renderTable();
+  }
+
+  function showProgress(done, total) {
+    const wrap = el('progressWrap');
+    wrap.style.display = 'block';
+    const pct = Math.round((done / total) * 100);
+    el('progressBar').style.width = pct + '%';
+    el('progressLabel').textContent = `Envoi en cours… ${done} / ${total} (${pct}%)`;
+  }
+
+  // ─── Persistence locale ────────────────────────────────────────────────────
+  function saveLocal() { localStorage.setItem('salsify_suppliers', JSON.stringify(suppliers)); }
+
+  // ─── Utilitaires ──────────────────────────────────────────────────────────
+  function el(id) { return document.getElementById(id); }
+  function v(id)  { return el(id).value.trim(); }
+  function isEmail(s) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s); }
+  function post(url, body) {
+    return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  }
+
+  function toast(msg, type = '') {
+    const t = el('toast');
+    t.textContent = msg;
+    t.className = `toast ${type} show`;
+    setTimeout(() => t.classList.remove('show'), 3500);
+  }
+
+  function showAppPasswordGuide() {
+    alert(`Comment obtenir un mot de passe d'application Google :\n\n1. Allez sur myaccount.google.com\n2. Sécurité → Validation en 2 étapes (doit être activée)\n3. Cherchez "Mots de passe des applications"\n4. Nom : "Email Salsify" → Créer\n5. Copiez le code à 16 caractères\n\n⚠️ Ce n'est pas votre mot de passe habituel.`);
+  }
+
+  // Drag & drop
+  const zone = el('importZone');
+  zone.addEventListener('dragover',  e => { e.preventDefault(); zone.style.borderColor = '#1a73e8'; });
+  zone.addEventListener('dragleave', () => zone.style.borderColor = '#c5d0e0');
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.style.borderColor = '#c5d0e0';
+    const file = e.dataTransfer.files[0];
+    if (file) importFile({ target: { files: [file] } });
+  });
+
+  // Fermer modal en cliquant dehors
+  el('modalOverlay').addEventListener('click', e => { if (e.target === el('modalOverlay')) closeModal(); });
+</script>
+</body>
+</html>
