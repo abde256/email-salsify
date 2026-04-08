@@ -711,9 +711,18 @@ Excellente journée à vous.`;
   function closeModal() { el('modalOverlay').classList.remove('open'); }
 
   // ─── Envoi ─────────────────────────────────────────────────────────────────
+  function getSenderCredentials() {
+    const emailDisabled = el('senderEmail').disabled;
+    const pwdDisabled   = el('senderPassword').disabled;
+    return {
+      sEmail: emailDisabled ? '' : v('senderEmail'),
+      sPwd:   pwdDisabled   ? '' : v('senderPassword')
+    };
+  }
+
   async function sendOne(i) {
-    const sEmail = v('senderEmail'), sPwd = v('senderPassword');
-    if (!sEmail || !sPwd) { toast('Configurez la connexion Gmail d\'abord.', 'error'); return; }
+    const { sEmail, sPwd } = getSenderCredentials();
+    if (!sEmail && !el('senderEmail').disabled) { toast('Configurez la connexion Gmail d\'abord.', 'error'); return; }
     suppliers[i].status = 'sending';
     renderTable();
     const result = await sendRequest(sEmail, sPwd, [suppliers[i]]);
@@ -721,8 +730,8 @@ Excellente journée à vous.`;
   }
 
   async function sendAll() {
-    const sEmail = v('senderEmail'), sPwd = v('senderPassword');
-    if (!sEmail || !sPwd) { toast('Configurez la connexion Gmail d\'abord.', 'error'); return; }
+    const { sEmail, sPwd } = getSenderCredentials();
+    if (!sEmail && !el('senderEmail').disabled) { toast('Configurez la connexion Gmail d\'abord.', 'error'); return; }
     const pending = suppliers.filter(s => s.status !== 'success');
     if (!pending.length) { toast('Tous les emails ont déjà été envoyés.', 'success'); return; }
     if (!confirm(`Envoyer ${pending.length} email(s) ?`)) return;
