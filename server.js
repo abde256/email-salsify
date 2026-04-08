@@ -10,8 +10,8 @@ const app = express();
 // ─── Variables d'environnement ────────────────────────────────────────────────
 const APP_USERNAME     = process.env.APP_USERNAME     || 'admin';
 const APP_PASSWORD     = process.env.APP_PASSWORD     || 'salsify2024';
-const SENDER_EMAIL     = process.env.SENDER_EMAIL     || 'abderrahman_boubrahim@ext.carrefour.com';
-const SENDER_PASSWORD  = process.env.SENDER_PASSWORD  || '';
+const SENDER_EMAIL     = process.env.GMAIL_USER       || 'abderrahman_boubrahim@ext.carrefour.com';
+const SENDER_PASSWORD  = process.env.GMAIL_PASSWORD   || '';
 const SESSION_SECRET   = process.env.SESSION_SECRET   || 'salsify-secret-change-me';
 
 // ─── Middlewares ──────────────────────────────────────────────────────────────
