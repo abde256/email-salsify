@@ -219,18 +219,17 @@
 
 <div class="container">
 
-  <!-- ── ÉTAPE 1 : Connexion Gmail ────────────────────────────────────────── -->
+  <!-- ── ÉTAPE 1 : Connexion Email ─────────────────────────────────────────── -->
   <div class="card">
-    <h2>⚙️ Étape 1 — Connexion Gmail</h2>
+    <h2>⚙️ Étape 1 — Connexion Email professionnel</h2>
     <div class="form-row">
       <div class="form-group">
-        <label>Adresse Gmail professionnelle</label>
-        <input type="email" id="senderEmail" placeholder="prenom.nom@gmail.com" />
+        <label>Adresse email professionnelle</label>
+        <input type="email" id="senderEmail" value="abderrahman_boubrahim@ext.carrefour.com" placeholder="prenom.nom@ext.carrefour.com" />
       </div>
       <div class="form-group">
-        <label>Mot de passe d'application Google</label>
-        <input type="password" id="senderPassword" placeholder="xxxx xxxx xxxx xxxx" />
-        <span class="hint"><a onclick="showAppPasswordGuide()">Comment obtenir un mot de passe d'application ?</a></span>
+        <label>Mot de passe</label>
+        <input type="password" id="senderPassword" placeholder="Votre mot de passe" />
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:14px;margin-top:4px;">
@@ -380,8 +379,8 @@
         el('senderEmail').disabled = true;
         el('senderPassword').value = '••••••••••••••••';
         el('senderPassword').disabled = true;
-        el('connectionStatus').innerHTML = '<span class="tag-connected">✅ Gmail configuré via serveur</span>';
-        toast('Gmail pré-configuré côté serveur.', 'success');
+        el('connectionStatus').innerHTML = '<span class="tag-connected">✅ Email configuré via serveur</span>';
+        toast('Email pré-configuré côté serveur.', 'success');
       }
     } catch {}
   }

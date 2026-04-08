@@ -8,11 +8,11 @@ const path       = require('path');
 const app = express();
 
 // ─── Variables d'environnement ────────────────────────────────────────────────
-const APP_USERNAME   = process.env.APP_USERNAME   || 'admin';
-const APP_PASSWORD   = process.env.APP_PASSWORD   || 'salsify2024';
-const GMAIL_USER     = process.env.GMAIL_USER     || '';
-const GMAIL_PASSWORD = process.env.GMAIL_PASSWORD || '';
-const SESSION_SECRET = process.env.SESSION_SECRET || 'salsify-secret-change-me';
+const APP_USERNAME     = process.env.APP_USERNAME     || 'admin';
+const APP_PASSWORD     = process.env.APP_PASSWORD     || 'salsify2024';
+const SENDER_EMAIL     = process.env.SENDER_EMAIL     || 'abderrahman_boubrahim@ext.carrefour.com';
+const SENDER_PASSWORD  = process.env.SENDER_PASSWORD  || '';
+const SESSION_SECRET   = process.env.SESSION_SECRET   || 'salsify-secret-change-me';
 
 // ─── Middlewares ──────────────────────────────────────────────────────────────
 app.set('trust proxy', 1); // nécessaire derrière le proxy Render
@@ -65,18 +65,18 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// ─── Config serveur (Gmail pré-configuré ?) ───────────────────────────────────
+// ─── Config serveur (email pré-configuré ?) ──────────────────────────────────
 app.get('/api/config', (req, res) => {
   res.json({
-    gmailConfigured: !!(GMAIL_USER && GMAIL_PASSWORD),
-    gmailUser: GMAIL_USER || ''
+    gmailConfigured: !!(SENDER_EMAIL && SENDER_PASSWORD),
+    gmailUser: SENDER_EMAIL || ''
   });
 });
 
-// ─── Test connexion Gmail ─────────────────────────────────────────────────────
+// ─── Test connexion email ─────────────────────────────────────────────────────
 app.post('/api/test-connection', async (req, res) => {
-  const email    = req.body.email    || GMAIL_USER;
-  const password = req.body.password || GMAIL_PASSWORD;
+  const email    = req.body.email    || SENDER_EMAIL;
+  const password = req.body.password || SENDER_PASSWORD;
   if (!email || !password) return res.status(400).json({ success: false, message: 'Identifiants manquants.' });
   try {
     const transporter = nodemailer.createTransport({ service: 'gmail', auth: { user: email, pass: password } });
@@ -89,8 +89,8 @@ app.post('/api/test-connection', async (req, res) => {
 
 // ─── Envoi des emails ─────────────────────────────────────────────────────────
 app.post('/api/send-emails', async (req, res) => {
-  const senderEmail    = req.body.senderEmail    || GMAIL_USER;
-  const senderPassword = req.body.senderPassword || GMAIL_PASSWORD;
+  const senderEmail    = req.body.senderEmail    || SENDER_EMAIL;
+  const senderPassword = req.body.senderPassword || SENDER_PASSWORD;
   const { suppliers }  = req.body;
 
   if (!senderEmail || !senderPassword || !suppliers?.length) {
@@ -156,7 +156,7 @@ Excellente journée à vous.`;
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`\n✅ Serveur démarré sur http://localhost:${PORT}`);
-  if (GMAIL_USER)   console.log(`   Gmail pré-configuré : ${GMAIL_USER}`);
-  if (!GMAIL_USER)  console.log(`   Gmail : à configurer dans l'interface`);
+  if (SENDER_EMAIL)  console.log(`   Email pré-configuré : ${SENDER_EMAIL}`);
+  if (!SENDER_EMAIL) console.log(`   Email : à configurer dans l'interface`);
   console.log(`   Login : ${APP_USERNAME} / (mot de passe défini)\n`);
 });
