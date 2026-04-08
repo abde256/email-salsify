@@ -636,7 +636,7 @@
     const map = {
       pending: '<span class="status-badge s-pending">⏳ En attente</span>',
       success: '<span class="status-badge s-success">✅ Envoyé</span>',
-      error:   `<span class="status-badge s-error" title="${error||''}">❌ Erreur</span>`,
+      error:   `<span class="status-badge s-error">❌ Erreur</span>${error ? `<br><span style="font-size:11px;color:#991b1b;word-break:break-word;">${error}</span>` : ''}`,
       sending: '<span class="status-badge s-sending">📤 Envoi…</span>',
     };
     return map[status] || '';
