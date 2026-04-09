@@ -7,449 +7,394 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f4f6f9; color: #1a1a2e; min-height: 100vh; }
 
+    /* ── Header ── */
     header {
-      background: linear-gradient(135deg, #1a73e8, #0d47a1);
-      color: white; padding: 18px 40px;
+      background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
+      color: white; padding: 16px 36px;
       display: flex; align-items: center; gap: 14px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.18);
     }
-    header h1 { font-size: 20px; font-weight: 600; }
-    header p  { font-size: 13px; opacity: .85; margin-top: 2px; }
+    .header-icon {
+      width: 40px; height: 40px; background: rgba(255,255,255,0.2);
+      border-radius: 10px; display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    header h1 { font-size: 18px; font-weight: 700; letter-spacing: -.2px; }
+    header p  { font-size: 12px; opacity: .8; margin-top: 2px; }
+    .header-right { margin-left: auto; }
+    .btn-logout {
+      background: rgba(255,255,255,0.15); color: white;
+      border: 1px solid rgba(255,255,255,0.3); border-radius: 8px;
+      padding: 7px 16px; font-size: 13px; cursor: pointer;
+      font-weight: 600; transition: background .2s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-logout:hover { background: rgba(255,255,255,0.25); }
 
-    .container { max-width: 1100px; margin: 28px auto; padding: 0 20px 60px; }
+    /* ── Layout ── */
+    .container { max-width: 1000px; margin: 28px auto; padding: 0 20px 80px; }
 
+    /* ── Step label ── */
+    .step-label {
+      font-size: 11px; font-weight: 700; color: #1a73e8;
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
+    }
+    .step-num {
+      width: 20px; height: 20px; background: #1a73e8; color: white;
+      border-radius: 50%; font-size: 11px; font-weight: 700;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+
+    /* ── Card ── */
     .card {
-      background: white; border-radius: 12px;
-      padding: 26px 30px; margin-bottom: 22px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      background: white; border-radius: 16px;
+      padding: 28px 32px; margin-bottom: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.06);
     }
-    .card h2 {
-      font-size: 15px; font-weight: 700; color: #1a73e8;
-      margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+    .card-title {
+      font-size: 16px; font-weight: 700; color: #111;
+      margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
+    }
+    .card-title span { font-size: 20px; }
+
+    /* ── Form ── */
+    .form-row  { display: flex; gap: 14px; margin-bottom: 14px; flex-wrap: wrap; }
+    .form-group { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 5px; }
+    .form-label {
+      font-size: 11px; font-weight: 700; color: #666;
+      text-transform: uppercase; letter-spacing: .5px;
     }
 
-    .form-row { display: flex; gap: 14px; margin-bottom: 12px; flex-wrap: wrap; }
-    .form-group { flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 5px; }
-    label { font-size: 12px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: .4px; }
-
-    input[type="email"], input[type="password"], input[type="text"], textarea, select {
-      border: 1.5px solid #dde1e7; border-radius: 8px;
-      padding: 9px 13px; font-size: 14px; font-family: inherit;
-      outline: none; transition: border-color .2s; width: 100%;
+    input[type="email"], input[type="password"], input[type="text"],
+    input[type="number"], textarea, select {
+      border: 1.5px solid #e2e6ea; border-radius: 10px;
+      padding: 10px 14px; font-size: 14px; font-family: inherit;
+      outline: none; transition: border-color .2s, box-shadow .2s; width: 100%;
+      background: #fafbfc;
     }
-    input:focus, textarea:focus { border-color: #1a73e8; box-shadow: 0 0 0 3px rgba(26,115,232,.1); }
-    textarea { resize: vertical; min-height: 80px; }
-
-    .hint { font-size: 12px; color: #999; margin-top: 3px; }
-    .hint a { color: #1a73e8; cursor: pointer; }
-
-    .btn {
-      display: inline-flex; align-items: center; gap: 7px;
-      padding: 9px 18px; border-radius: 8px; font-size: 13px;
-      font-weight: 600; cursor: pointer; border: none; transition: all .18s;
-      white-space: nowrap;
+    input:focus, textarea:focus, select:focus {
+      border-color: #1a73e8; box-shadow: 0 0 0 3px rgba(26,115,232,.12);
+      background: white;
     }
-    .btn-primary  { background: #1a73e8; color: white; }
-    .btn-primary:hover  { background: #1558b0; }
-    .btn-secondary{ background: #f1f3f4; color: #444; }
-    .btn-secondary:hover{ background: #e2e5e9; }
-    .btn-success  { background: #34a853; color: white; }
-    .btn-success:hover  { background: #2d9249; }
-    .btn-warning  { background: #fbbc04; color: #333; }
-    .btn-warning:hover  { background: #f0a800; }
-    .btn-danger   { background: #ea4335; color: white; }
-    .btn-danger:hover   { background: #c5221f; }
-    .btn-sm { padding: 5px 11px; font-size: 12px; }
-    .btn:disabled { opacity: .45; cursor: not-allowed; }
+    textarea { resize: vertical; min-height: 90px; }
+    .hint { font-size: 11px; color: #aaa; margin-top: 2px; }
 
+    /* ── Connexion Gmail block ── */
+    .gmail-block {
+      background: #f8fbff; border: 1.5px solid #d0e4ff;
+      border-radius: 12px; padding: 20px 22px;
+    }
+    .gmail-block-header {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+    }
+    .gmail-logo {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: white; box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+      display: flex; align-items: center; justify-content: center; font-size: 18px;
+    }
+    .gmail-block-title { font-size: 14px; font-weight: 700; color: #1a1a2e; }
+    .gmail-block-sub   { font-size: 12px; color: #888; margin-top: 1px; }
+
+    .conn-bar { display: flex; align-items: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
     .tag-connected {
       display: inline-flex; align-items: center; gap: 6px;
       background: #e6f4ea; color: #2d9249;
-      border-radius: 20px; padding: 4px 12px; font-size: 13px; font-weight: 500;
+      border-radius: 20px; padding: 5px 14px; font-size: 13px; font-weight: 600;
+    }
+    .tag-error {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #fee2e2; color: #991b1b;
+      border-radius: 20px; padding: 5px 14px; font-size: 13px; font-weight: 600;
     }
 
-    /* Zone import */
-    .import-zone {
-      border: 2px dashed #c5d0e0; border-radius: 10px;
-      padding: 22px; text-align: center; color: #888;
-      cursor: pointer; transition: border-color .2s, background .2s; margin-bottom: 16px;
-    }
-    .import-zone:hover { border-color: #1a73e8; background: #f0f6ff; }
-    .import-zone input { display: none; }
-
-    /* Tableau */
-    .tbl-wrap { overflow-x: auto; margin-top: 16px; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    thead th {
-      background: #f8f9fa; font-size: 11px; font-weight: 700;
-      text-transform: uppercase; color: #666; padding: 10px 12px;
-      text-align: left; border-bottom: 2px solid #e9ecef; white-space: nowrap;
-    }
-    tbody td { padding: 11px 12px; border-bottom: 1px solid #f0f2f5; vertical-align: middle; }
-    tbody tr:last-child td { border-bottom: none; }
-    tbody tr:hover td { background: #fafbff; }
-
-    .email-chips { display: flex; flex-wrap: wrap; gap: 5px; }
-    .chip {
-      display: inline-flex; align-items: center; gap: 4px;
-      border-radius: 20px; padding: 2px 9px; font-size: 12px; font-weight: 500;
-    }
-    .chip-blue   { background: #e8f0fe; color: #1a73e8; }
-    .chip-green  { background: #e6f4ea; color: #2d9249; }
-    .chip-orange { background: #fff3e0; color: #e65100; }
-    .chip-ean    { background: #f3e8ff; color: #7b1fa2; font-family: monospace; }
-
-    .status-badge {
+    /* App password guide */
+    .guide-toggle {
       display: inline-flex; align-items: center; gap: 5px;
-      border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 700;
+      font-size: 12px; color: #1a73e8; font-weight: 600;
+      cursor: pointer; margin-top: 12px; border: none; background: none;
+      padding: 0; text-decoration: underline; text-underline-offset: 2px;
     }
-    .s-pending  { background: #fef3c7; color: #b45309; }
-    .s-success  { background: #d1fae5; color: #065f46; }
-    .s-error    { background: #fee2e2; color: #991b1b; }
-    .s-sending  { background: #dbeafe; color: #1e40af; }
-
-    /* Formulaire ajout / édition */
-    .form-panel {
-      background: #f8f9fa; border-radius: 10px;
-      padding: 20px; margin-bottom: 18px;
-      border: 1.5px solid #e9ecef;
+    .guide-box {
+      background: #f0f6ff; border-radius: 10px; padding: 14px 18px;
+      margin-top: 10px; display: none;
     }
-    .form-panel h3 { font-size: 14px; font-weight: 600; margin-bottom: 14px; color: #333; }
+    .guide-box.open { display: block; }
+    .guide-box ol { font-size: 12px; color: #444; padding-left: 18px; line-height: 2.2; }
+    .guide-box ol strong { color: #1a73e8; }
 
-    .emails-input-wrap { position: relative; }
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 10px 20px; border-radius: 10px; font-size: 13px;
+      font-weight: 700; cursor: pointer; border: none; transition: all .18s;
+      white-space: nowrap; letter-spacing: .1px;
+    }
+    .btn-primary   { background: #1a73e8; color: white; }
+    .btn-primary:hover   { background: #1558b0; }
+    .btn-secondary { background: #f1f3f4; color: #444; }
+    .btn-secondary:hover { background: #e2e5e9; }
+    .btn-success   { background: #34a853; color: white; }
+    .btn-success:hover   { background: #2d9249; }
+    .btn-warning   { background: #fbbc04; color: #333; }
+    .btn-warning:hover   { background: #f0a800; }
+    .btn-danger    { background: #ea4335; color: white; }
+    .btn-danger:hover    { background: #c5221f; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* ── Zone import ── */
+    .import-zone {
+      border: 2px dashed #d0d9e8; border-radius: 12px;
+      padding: 28px; text-align: center; color: #999;
+      cursor: pointer; transition: all .2s; margin-bottom: 18px; display: block;
+    }
+    .import-zone:hover { border-color: #1a73e8; background: #f0f6ff; color: #1a73e8; }
+    .import-zone input { display: none; }
+    .import-icon { font-size: 32px; margin-bottom: 8px; }
+    .import-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+    .import-sub   { font-size: 12px; }
+
+    /* ── Tags email ── */
     .emails-tags-box {
-      border: 1.5px solid #dde1e7; border-radius: 8px;
-      padding: 7px 10px; display: flex; flex-wrap: wrap;
-      gap: 6px; cursor: text; min-height: 42px; align-items: center;
-      transition: border-color .2s;
+      border: 1.5px solid #e2e6ea; border-radius: 10px;
+      padding: 8px 12px; display: flex; flex-wrap: wrap;
+      gap: 6px; cursor: text; min-height: 44px; align-items: center;
+      background: #fafbfc; transition: border-color .2s, box-shadow .2s;
     }
-    .emails-tags-box:focus-within { border-color: #1a73e8; box-shadow: 0 0 0 3px rgba(26,115,232,.1); }
-    .emails-tags-box .chip { cursor: default; }
-    .emails-tags-box .chip span { cursor: pointer; margin-left: 4px; opacity: .6; }
-    .emails-tags-box .chip span:hover { opacity: 1; }
+    .emails-tags-box:focus-within {
+      border-color: #1a73e8; box-shadow: 0 0 0 3px rgba(26,115,232,.12);
+      background: white;
+    }
     .emails-tags-box input {
       border: none; outline: none; padding: 2px 4px;
       font-size: 13px; flex: 1; min-width: 160px;
       box-shadow: none; background: transparent;
     }
-
-    /* Progress */
-    .progress-wrap { margin-top: 18px; display: none; }
-    .progress-bar-bg {
-      background: #e9ecef; border-radius: 20px; height: 10px; overflow: hidden;
+    .chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      border-radius: 20px; padding: 3px 10px; font-size: 12px; font-weight: 500;
     }
+    .chip-blue   { background: #e8f0fe; color: #1a73e8; }
+    .chip-orange { background: #fff3e0; color: #e65100; }
+    .chip-ean    { background: #f3e8ff; color: #7b1fa2; font-family: monospace; }
+    .chip span   { cursor: pointer; opacity: .6; }
+    .chip span:hover { opacity: 1; }
+
+    /* ── Tableau ── */
+    .tbl-wrap { overflow-x: auto; margin-top: 6px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th {
+      background: #f8f9fa; font-size: 10px; font-weight: 800;
+      text-transform: uppercase; color: #888; padding: 10px 14px;
+      text-align: left; border-bottom: 2px solid #eef0f3;
+      white-space: nowrap; letter-spacing: .5px;
+    }
+    tbody td { padding: 12px 14px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: #fafbff; }
+    .email-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+
+    /* ── Statut badges ── */
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 700;
+    }
+    .s-pending { background: #fef3c7; color: #b45309; }
+    .s-success { background: #d1fae5; color: #065f46; }
+    .s-error   { background: #fee2e2; color: #991b1b; }
+    .s-sending { background: #dbeafe; color: #1e40af; }
+
+    /* ── Form panel fournisseur ── */
+    .form-panel {
+      background: #f8f9fa; border-radius: 12px;
+      padding: 20px 22px; margin-bottom: 20px;
+      border: 1.5px solid #eef0f3;
+    }
+    .form-panel h3 { font-size: 14px; font-weight: 700; margin-bottom: 16px; color: #333; }
+    .divider { text-align: center; color: #ccc; margin-bottom: 18px; font-size: 13px; }
+
+    /* ── Progress ── */
+    .progress-wrap { margin-top: 20px; display: none; }
+    .progress-bar-bg { background: #e9ecef; border-radius: 20px; height: 8px; overflow: hidden; }
     .progress-bar-fill {
       background: linear-gradient(90deg, #1a73e8, #34a853);
       height: 100%; border-radius: 20px; transition: width .4s ease;
     }
-    .progress-label { font-size: 13px; color: #555; margin-top: 8px; }
+    .progress-label { font-size: 13px; color: #666; margin-top: 8px; }
 
-    /* Modal */
-    .modal-overlay {
-      display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,.5); z-index: 100;
-      align-items: center; justify-content: center;
-    }
-    .modal-overlay.open { display: flex; }
-    .modal {
-      background: white; border-radius: 14px;
-      width: 92%; max-width: 720px; max-height: 88vh;
-      overflow-y: auto; padding: 28px 32px;
-      box-shadow: 0 20px 60px rgba(0,0,0,.2);
-    }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
-    .modal-header h3 { font-size: 16px; color: #1a73e8; }
-    .modal-close { cursor: pointer; font-size: 20px; color: #999; background: none; border: none; }
-    .modal-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
-
-    .pf { margin-bottom: 14px; }
-    .pf label { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; display: block; margin-bottom: 4px; }
-    .pf .val {
-      background: #f8f9fa; border-radius: 8px;
-      padding: 10px 14px; font-size: 13px;
-      white-space: pre-wrap; line-height: 1.7; font-family: 'Segoe UI', sans-serif;
-    }
-    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
-
-    /* Résumé */
-    #sendSummary { margin-top: 18px; }
+    /* ── Summary ── */
+    #sendSummary { margin-top: 20px; }
     .summary-box {
-      border-radius: 10px; padding: 14px 18px;
-      font-size: 14px; line-height: 1.8;
+      border-radius: 12px; padding: 16px 20px;
+      font-size: 14px; line-height: 1.8; font-weight: 500;
     }
     .summary-ok  { background: #d1fae5; color: #065f46; }
     .summary-err { background: #fee2e2; color: #991b1b; }
 
-    /* Toast */
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.45); z-index: 100;
+      align-items: center; justify-content: center; backdrop-filter: blur(2px);
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: white; border-radius: 16px;
+      width: 92%; max-width: 700px; max-height: 88vh;
+      overflow-y: auto; padding: 28px 32px;
+      box-shadow: 0 24px 64px rgba(0,0,0,.18);
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+    .modal-header h3 { font-size: 16px; font-weight: 700; color: #1a1a2e; }
+    .modal-close { cursor: pointer; font-size: 22px; color: #bbb; background: none; border: none; line-height: 1; }
+    .modal-close:hover { color: #666; }
+    .modal-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .pf { margin-bottom: 14px; }
+    .pf label { font-size: 10px; font-weight: 800; color: #aaa; text-transform: uppercase; letter-spacing: .5px; display: block; margin-bottom: 4px; }
+    .pf .val {
+      background: #f8f9fa; border-radius: 10px;
+      padding: 12px 16px; font-size: 13px;
+      white-space: pre-wrap; line-height: 1.7; font-family: 'Segoe UI', sans-serif;
+    }
+    .modal-footer { display: flex; justify-content: flex-end; margin-top: 20px; }
+
+    /* ── Actions bar ── */
+    .actions-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 18px; }
+    .spacer { flex: 1; }
+
+    /* ── Toast ── */
     .toast {
       position: fixed; bottom: 28px; right: 28px;
-      background: #323232; color: white;
-      padding: 12px 20px; border-radius: 10px;
+      background: #1a1a2e; color: white;
+      padding: 12px 20px; border-radius: 12px;
       font-size: 14px; z-index: 200;
-      opacity: 0; transform: translateY(16px); transition: all .3s;
-      max-width: 380px;
+      opacity: 0; transform: translateY(12px); transition: all .25s;
+      max-width: 360px; font-weight: 500;
+      box-shadow: 0 8px 24px rgba(0,0,0,.18);
     }
     .toast.show { opacity: 1; transform: translateY(0); }
     .toast.success { background: #34a853; }
     .toast.error   { background: #ea4335; }
 
-    .actions-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 16px; }
-    .spacer { flex: 1; }
-
-    /* SMTP provider */
-    .smtp-section { margin-top: 18px; padding-top: 18px; border-top: 1.5px solid #e9ecef; }
-    .smtp-section > .section-title {
-      font-size: 12px; font-weight: 700; color: #555;
-      text-transform: uppercase; letter-spacing: .4px; margin-bottom: 10px;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .smtp-provider-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
-    .smtp-pill {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 7px 16px; border-radius: 22px; font-size: 12px; font-weight: 700;
-      border: 1.5px solid #dde1e7; background: #f8f9fa; color: #555;
-      cursor: pointer; transition: all .15s; user-select: none;
-    }
-    .smtp-pill.active          { background: #1a73e8; color: white; border-color: #1a73e8; }
-    .smtp-pill.active-brevo    { background: #7c3aed; color: white; border-color: #7c3aed; }
-    .smtp-pill.active-gmail    { background: #ea4335; color: white; border-color: #ea4335; }
-    .smtp-pill.active-o365     { background: #0078d4; color: white; border-color: #0078d4; }
-    .smtp-pill:hover:not(.active):not(.active-brevo):not(.active-gmail):not(.active-o365) { border-color: #1a73e8; color: #1a73e8; }
-
-    /* Brevo panel */
-    .brevo-panel {
-      background: #faf5ff; border: 1.5px solid #d8b4fe;
-      border-radius: 12px; padding: 18px 20px; margin-bottom: 4px;
-    }
-    .brevo-panel-title {
-      font-size: 13px; font-weight: 700; color: #7c3aed;
-      margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
-    }
-    .brevo-guide {
-      background: white; border: 1px solid #e9d5ff; border-radius: 8px;
-      padding: 12px 16px; margin-top: 14px;
-    }
-    .brevo-guide summary {
-      cursor: pointer; font-size: 12px; font-weight: 700;
-      color: #7c3aed; list-style: none; display: flex; align-items: center; gap: 6px;
-    }
-    .brevo-guide summary::before { content: '▶'; font-size: 10px; transition: transform .2s; }
-    .brevo-guide[open] summary::before { transform: rotate(90deg); }
-    .brevo-guide ol { font-size: 12px; color: #555; margin-top: 10px; padding-left: 20px; line-height: 2; }
-    .brevo-guide ol a { color: #7c3aed; font-weight: 600; }
-
-    /* Warning panel */
-    .warn-panel {
-      background: #fffbeb; border: 1.5px solid #fcd34d;
-      border-radius: 10px; padding: 12px 16px; margin-top: 10px;
-      font-size: 12px; color: #92400e; line-height: 1.8;
-    }
-    .warn-panel strong { color: #78350f; }
-
-    /* Custom SMTP */
-    .custom-smtp-grid { display: flex; gap: 12px; flex-wrap: wrap; }
-    .custom-smtp-grid .form-group { min-width: 140px; }
-
-    /* Info pill */
-    .smtp-info { font-size: 12px; color: #888; margin-top: 6px; display: flex; align-items: center; gap: 5px; }
-    .smtp-info strong { color: #444; }
-
     @media (max-width: 640px) {
+      .card { padding: 20px; }
       .form-row { flex-direction: column; }
-      .modal { padding: 18px; }
+      .modal { padding: 20px; }
+      header { padding: 14px 20px; }
     }
   </style>
 </head>
 <body>
 
 <header>
-  <div style="font-size:26px;">📧</div>
-  <div style="flex:1;">
-    <h1>Email Salsify – Envoi Fournisseurs</h1>
-    <p>Génération & envoi automatique d'emails de relance Salsify pour Carrefour.fr</p>
+  <div class="header-icon">📧</div>
+  <div>
+    <h1>Email Salsify</h1>
+    <p>Envoi automatique d'emails de relance fournisseurs — Carrefour.fr</p>
   </div>
-  <button onclick="logout()" style="background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer;font-weight:600;">
-    🚪 Déconnexion
-  </button>
+  <div class="header-right">
+    <button class="btn-logout" onclick="logout()">🚪 Déconnexion</button>
+  </div>
 </header>
 
 <div class="container">
 
-  <!-- ── ÉTAPE 1 : Connexion Email ─────────────────────────────────────────── -->
+  <!-- ── ÉTAPE 1 ── -->
+  <div class="step-label"><span class="step-num">1</span> Connexion email</div>
   <div class="card">
-    <h2>⚙️ Étape 1 — Configuration de l'envoi</h2>
+    <div class="card-title"><span>✉️</span> Compte expéditeur</div>
 
-    <!-- Sélecteur méthode d'envoi (en premier) -->
-    <div class="smtp-section" style="margin-top:0;padding-top:0;border-top:none;margin-bottom:20px;">
-      <div class="section-title">Méthode d'envoi</div>
-      <div class="smtp-provider-bar">
-        <span class="smtp-pill" id="pill-brevo"    onclick="setSmtpProvider('brevo')">🟣 Brevo — Recommandé</span>
-        <span class="smtp-pill" id="pill-office365" onclick="setSmtpProvider('office365')">🔵 Office 365</span>
-        <span class="smtp-pill" id="pill-gmail"    onclick="setSmtpProvider('gmail')">🔴 Gmail</span>
-        <span class="smtp-pill" id="pill-outlook"  onclick="setSmtpProvider('outlook')">📧 Outlook.com</span>
-        <span class="smtp-pill" id="pill-custom"   onclick="setSmtpProvider('custom')">⚙️ Personnalisé</span>
-      </div>
-    </div>
-
-    <!-- ─ Panel Brevo ─────────────────────────────────── -->
-    <div id="panelBrevo" style="display:none;">
-      <div class="brevo-panel">
-        <div class="brevo-panel-title">🚀 Envoi via Brevo (relay dédié — fonctionne depuis n'importe quel serveur cloud)</div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Email expéditeur — affiché dans les emails reçus</label>
-            <input type="email" id="brevoFrom"  placeholder="abderrahman_boubrahim@ext.carrefour.com" />
-            <span class="hint">L'adresse qui apparaîtra comme expéditeur chez le fournisseur</span>
-          </div>
+    <div class="gmail-block">
+      <div class="gmail-block-header">
+        <div class="gmail-logo">G</div>
+        <div>
+          <div class="gmail-block-title">Gmail / Google Workspace</div>
+          <div class="gmail-block-sub">Entrez votre adresse et votre mot de passe d'application</div>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Login Brevo (votre email de compte Brevo)</label>
-            <input type="email" id="brevoLogin" placeholder="mon-compte@brevo.com" />
-          </div>
-          <div class="form-group">
-            <label>Clé API v3 Brevo</label>
-            <input type="password" id="brevoKey" placeholder="xkeysib-xxxxxxxxxxxx" />
-            <span class="hint">Clé API v3 (pas la clé SMTP) — voir guide ci-dessous</span>
-          </div>
-        </div>
-
-        <details class="brevo-guide">
-          <summary>Obtenir une clé SMTP Brevo gratuitement (300 emails/jour)</summary>
-          <ol>
-            <li>Connectez-vous sur <strong>brevo.com</strong></li>
-            <li>Allez dans <strong>Paramètres → Clés API SMTP &amp; API</strong></li>
-            <li>Section <strong>"Clés API"</strong> (pas "Clés SMTP") → cliquez <strong>"Générer une nouvelle clé API"</strong></li>
-            <li>Copiez la clé — elle commence par <code>xkeysib-</code></li>
-            <li>Dans <strong>Expéditeurs &amp; domaines → Expéditeurs</strong>, vérifiez que votre email professionnel est bien listé et vérifié</li>
-            <li>Entrez le tout ci-dessus et testez la connexion</li>
-          </ol>
-        </details>
       </div>
 
-      <div style="display:flex;align-items:center;gap:14px;margin-top:14px;">
-        <button class="btn btn-secondary" onclick="testConnection()">🔌 Tester la connexion Brevo</button>
-        <span id="connectionStatus"></span>
-      </div>
-    </div>
-
-    <!-- ─ Panel SMTP standard (Office 365 / Gmail / Outlook / Custom) ──── -->
-    <div id="panelStandard" style="display:none;">
       <div class="form-row">
         <div class="form-group">
-          <label id="labelEmail">Adresse email</label>
-          <input type="email" id="senderEmail" placeholder="prenom.nom@ext.carrefour.com" />
+          <div class="form-label">Adresse email</div>
+          <input type="email" id="senderEmail" placeholder="prenom_nom@ext.carrefour.com" />
         </div>
         <div class="form-group">
-          <label id="labelPassword">Mot de passe</label>
-          <input type="password" id="senderPassword" placeholder="Votre mot de passe" />
-          <span class="hint" id="hintPassword"></span>
+          <div class="form-label">Mot de passe d'application</div>
+          <input type="password" id="senderPassword" placeholder="xxxx xxxx xxxx xxxx" />
+          <div class="hint">Pas votre mot de passe habituel — <button class="guide-toggle" onclick="toggleGuide()">comment l'obtenir ?</button></div>
         </div>
       </div>
 
-      <!-- Avertissement Office 365 -->
-      <div class="warn-panel" id="warnO365" style="display:none;">
-        ⚠️ <strong>Office 365 / Exchange — Authentification SMTP basique</strong><br>
-        Microsoft désactive progressivement cette méthode pour les comptes corporate. Si vous obtenez une erreur de connexion, votre admin IT doit activer <em>"SMTP AUTH"</em> sur votre boîte mail, ou utilisez <strong>Brevo</strong> (recommandé, sans restriction).
+      <div class="guide-box" id="guideBox">
+        <ol>
+          <li>Connectez-vous sur <strong>myaccount.google.com</strong></li>
+          <li>Allez dans <strong>Sécurité → Validation en 2 étapes</strong> (doit être activée)</li>
+          <li>Faites défiler vers le bas → cliquez <strong>"Mots de passe des applications"</strong></li>
+          <li>Nom : <em>Email Salsify</em> → cliquez <strong>Créer</strong></li>
+          <li>Copiez le code à <strong>16 caractères</strong> et collez-le ci-dessus</li>
+        </ol>
       </div>
 
-      <!-- Avertissement Gmail -->
-      <div class="warn-panel" id="warnGmail" style="display:none;">
-        ⚠️ <strong>Gmail — Mot de passe d'application requis</strong><br>
-        Google bloque les connexions avec votre mot de passe habituel. Vous devez utiliser un <em>"Mot de passe d'application"</em> :<br>
-        <strong>myaccount.google.com → Sécurité → Validation en 2 étapes → Mots de passe des applications</strong>
-      </div>
-
-      <!-- Champs SMTP personnalisé -->
-      <div id="customSmtpFields" style="display:none;margin-top:12px;">
-        <div class="custom-smtp-grid">
-          <div class="form-group" style="flex:2;min-width:200px;">
-            <label>Hôte SMTP</label>
-            <input type="text" id="smtpHost" placeholder="smtp.monentreprise.com" />
-          </div>
-          <div class="form-group" style="max-width:110px;">
-            <label>Port</label>
-            <input type="number" id="smtpPort" value="587" min="1" max="65535" />
-          </div>
-          <div class="form-group" style="max-width:160px;">
-            <label>Chiffrement</label>
-            <select id="smtpSecure" onchange="syncPortToEncryption()">
-              <option value="starttls">STARTTLS (587)</option>
-              <option value="ssl">SSL/TLS (465)</option>
-              <option value="none">Aucun (25)</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div class="smtp-info" id="smtpInfoLabel" style="margin-top:10px;"></div>
-
-      <div style="display:flex;align-items:center;gap:14px;margin-top:14px;">
+      <div class="conn-bar">
         <button class="btn btn-secondary" onclick="testConnection()">🔌 Tester la connexion</button>
         <span id="connectionStatus"></span>
       </div>
     </div>
   </div>
 
-  <!-- ── ÉTAPE 2 : Fournisseurs ───────────────────────────────────────────── -->
+  <!-- ── ÉTAPE 2 ── -->
+  <div class="step-label"><span class="step-num">2</span> Données fournisseurs</div>
   <div class="card">
-    <h2>📋 Étape 2 — Données fournisseurs</h2>
+    <div class="card-title"><span>📋</span> Liste des fournisseurs</div>
 
-    <!-- Import -->
     <label class="import-zone" id="importZone">
       <input type="file" id="fileInput" accept=".csv,.txt,.xlsx,.xls" onchange="importFile(event)" />
-      <div style="font-size:30px;margin-bottom:6px;">📂</div>
-      <div style="font-weight:600;margin-bottom:4px;">Glissez un fichier ou cliquez pour importer</div>
-      <div style="font-size:12px;">Excel (.xlsx .xls) ou CSV — colonnes : Nom fournisseur | Email(s) | EAN</div>
+      <div class="import-icon">📂</div>
+      <div class="import-title">Glissez un fichier ou cliquez pour importer</div>
+      <div class="import-sub">Excel (.xlsx .xls) ou CSV — colonnes : Nom fournisseur | Email(s) | EAN</div>
     </label>
 
-    <div style="text-align:center;color:#bbb;margin-bottom:16px;font-size:13px;">— ou ajout manuel —</div>
+    <div class="divider">— ou ajout manuel —</div>
 
-    <!-- Formulaire ajout/édition -->
     <div class="form-panel" id="formPanel">
       <h3 id="formTitle">➕ Nouveau fournisseur</h3>
       <div class="form-row">
         <div class="form-group">
-          <label>Nom fournisseur *</label>
+          <div class="form-label">Nom fournisseur *</div>
           <input type="text" id="fNom" placeholder="Ex : DUPONT SAS" />
         </div>
       </div>
-
       <div class="form-group" style="margin-bottom:12px;">
-        <label>Adresses email (plusieurs possibles) *</label>
+        <div class="form-label">Adresses email destinataires *</div>
         <div class="emails-tags-box" id="emailsBox" onclick="focusEmailInput()">
           <input type="text" id="emailInput" placeholder="Tapez un email puis Entrée…"
             onkeydown="handleEmailKey(event)" onblur="addEmailFromInput()" />
         </div>
-        <span class="hint">Appuyez sur Entrée ou virgule pour valider chaque adresse. Vous pouvez en ajouter plusieurs.</span>
+        <div class="hint">Appuyez sur Entrée ou virgule pour valider. Plusieurs adresses possibles.</div>
       </div>
-
-      <div class="form-group" style="margin-bottom:12px;">
-        <label>CC (optionnel)</label>
+      <div class="form-group" style="margin-bottom:14px;">
+        <div class="form-label">CC (optionnel)</div>
         <div class="emails-tags-box" id="ccBox" onclick="focusCcInput()">
           <input type="text" id="ccInput" placeholder="Adresse(s) en copie…"
             onkeydown="handleCcKey(event)" onblur="addCcFromInput()" />
         </div>
       </div>
-
-      <div class="form-group" style="margin-bottom:14px;">
-        <label>EAN (un par ligne ou séparés par virgule) *</label>
-        <textarea id="fEans" placeholder="3760000000001&#10;3760000000002&#10;3760000000003"></textarea>
+      <div class="form-group" style="margin-bottom:16px;">
+        <div class="form-label">EAN (un par ligne ou séparés par virgule) *</div>
+        <textarea id="fEans" placeholder="3760000000001&#10;3760000000002"></textarea>
       </div>
-
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <button class="btn btn-primary" onclick="saveSupplier()">💾 Enregistrer</button>
         <button class="btn btn-secondary" onclick="cancelEdit()">Annuler</button>
       </div>
     </div>
 
-    <!-- Tableau fournisseurs -->
     <div id="tableWrap" style="display:none;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
-        <span id="supplierCount" style="font-size:13px;color:#666;"></span>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+        <span id="supplierCount" style="font-size:13px;color:#888;font-weight:600;"></span>
         <button class="btn btn-danger btn-sm" onclick="clearAll()">🗑️ Tout effacer</button>
       </div>
       <div class="tbl-wrap">
@@ -471,32 +416,30 @@
     </div>
   </div>
 
-  <!-- ── ÉTAPE 3 : Envoi ─────────────────────────────────────────────────── -->
+  <!-- ── ÉTAPE 3 ── -->
+  <div class="step-label"><span class="step-num">3</span> Envoi</div>
   <div class="card">
-    <h2>🚀 Étape 3 — Prévisualisation & Envoi</h2>
-    <p style="font-size:13px;color:#666;margin-bottom:16px;">
-      Vérifiez les emails générés avant l'envoi. Chaque email sera personnalisé avec le nom du fournisseur et ses EAN.
+    <div class="card-title"><span>🚀</span> Prévisualisation & Envoi</div>
+    <p style="font-size:13px;color:#888;margin-bottom:4px;">
+      Chaque email est personnalisé avec le nom du fournisseur et ses EAN.
     </p>
     <div class="actions-bar">
       <button class="btn btn-secondary" onclick="previewAll()">👁️ Prévisualiser</button>
       <button class="btn btn-success" id="btnSend" onclick="sendAll()">📤 Envoyer tous les emails</button>
       <button class="btn btn-warning" id="btnRetry" onclick="retryErrors()" style="display:none;">🔄 Réessayer les erreurs</button>
       <div class="spacer"></div>
-      <button class="btn btn-secondary" onclick="exportCSV()">⬇️ Exporter résultats CSV</button>
+      <button class="btn btn-secondary" onclick="exportCSV()">⬇️ Exporter CSV</button>
     </div>
-
-    <!-- Barre de progression -->
     <div class="progress-wrap" id="progressWrap">
       <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar" style="width:0%"></div></div>
       <div class="progress-label" id="progressLabel">Envoi en cours…</div>
     </div>
-
     <div id="sendSummary"></div>
   </div>
 
 </div>
 
-<!-- ── Modal prévisualisation ─────────────────────────────────────────────── -->
+<!-- Modal prévisualisation -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <div class="modal-header">
@@ -511,12 +454,9 @@
   </div>
 </div>
 
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
-<!-- SheetJS pour Excel -->
 <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
-
 <script>
   // ─── État ──────────────────────────────────────────────────────────────────
   let suppliers     = JSON.parse(localStorage.getItem('salsify_suppliers') || '[]');
@@ -524,38 +464,22 @@
   let currentEmails = [];
   let currentCcs    = [];
   let previewIdx    = 0;
-  let smtpProvider  = 'brevo'; // brevo | office365 | gmail | outlook | custom
-
-  // ─── SMTP Provider (déclaré avant l'init pour éviter la TDZ) ───────────────
-  const SMTP_INFO = {
-    brevo:     { label: 'smtp-relay.brevo.com:587 (relay dédié — recommandé)', activeClass: 'active-brevo' },
-    gmail:     { label: 'smtp.gmail.com:587 (Gmail — App Password requis)',     activeClass: 'active-gmail'  },
-    office365: { label: 'smtp.office365.com:587 (Microsoft 365)',               activeClass: 'active-o365'   },
-    outlook:   { label: 'smtp-mail.outlook.com:587 (Outlook.com personnel)',    activeClass: 'active'        },
-    custom:    { label: 'Serveur SMTP personnalisé',                            activeClass: 'active'        },
-  };
 
   // Init
-  setSmtpProvider('brevo', true);
   renderTable();
   checkServerConfig();
 
+  // ─── Config serveur ────────────────────────────────────────────────────────
   async function checkServerConfig() {
     try {
       const res  = await fetch('/api/config');
       const data = await res.json();
       if (data.senderConfigured) {
-        // Pré-remplir email standard si configuré côté serveur
-        if (el('senderEmail')) {
-          el('senderEmail').value    = data.senderEmail;
-          el('senderEmail').disabled = true;
-        }
-        if (el('senderPassword')) {
-          el('senderPassword').value    = '••••••••••••••••';
-          el('senderPassword').disabled = true;
-        }
+        el('senderEmail').value    = data.senderEmail;
+        el('senderEmail').disabled = true;
+        el('senderPassword').value    = '••••••••••••••••';
+        el('senderPassword').disabled = true;
         el('connectionStatus').innerHTML = '<span class="tag-connected">✅ Email configuré via serveur</span>';
-        toast('Email pré-configuré côté serveur.', 'success');
       }
     } catch {}
   }
@@ -565,128 +489,37 @@
     window.location.href = '/login';
   }
 
-  // ─── SMTP Provider ─────────────────────────────────────────────────────────
-  function setSmtpProvider(p, silent = false) {
-    smtpProvider = p;
-
-    // Mettre à jour les pills
-    ['brevo','office365','gmail','outlook','custom'].forEach(id => {
-      const pill = el('pill-' + id);
-      if (!pill) return;
-      pill.className = 'smtp-pill' + (id === p ? ' ' + SMTP_INFO[p].activeClass : '');
-    });
-
-    // Afficher le bon panel
-    const isBrevo = (p === 'brevo');
-    el('panelBrevo').style.display    = isBrevo ? 'block' : 'none';
-    el('panelStandard').style.display = isBrevo ? 'none'  : 'block';
-
-    if (!isBrevo) {
-      // Champs spéciaux selon provider
-      el('customSmtpFields').style.display = (p === 'custom') ? 'block' : 'none';
-      el('warnO365')?.style && (el('warnO365').style.display  = (p === 'office365') ? 'block' : 'none');
-      el('warnGmail')?.style && (el('warnGmail').style.display = (p === 'gmail')     ? 'block' : 'none');
-
-      // Labels dynamiques
-      const labels = { gmail: 'Email Gmail', office365: 'Email professionnel (Microsoft 365)', outlook: 'Email Outlook.com', custom: 'Email' };
-      const hints  = { gmail: 'Utilisez un mot de passe d\'application Google, pas votre mot de passe habituel', office365: 'Votre mot de passe professionnel (SMTP AUTH doit être activé par l\'admin)', outlook: 'Votre mot de passe Outlook.com' };
-      if (el('labelEmail'))    el('labelEmail').textContent    = labels[p] || 'Email';
-      if (el('labelPassword')) el('labelPassword').textContent = 'Mot de passe';
-      if (el('hintPassword'))  el('hintPassword').textContent  = hints[p]  || '';
-
-      // Info serveur
-      if (el('smtpInfoLabel'))
-        el('smtpInfoLabel').innerHTML = `<span>Serveur :</span> <strong>${SMTP_INFO[p]?.label || ''}</strong>`;
-    }
-
-    // Enregistrer le choix
-    localStorage.setItem('salsify_smtp_provider', p);
+  // ─── Guide App Password ────────────────────────────────────────────────────
+  function toggleGuide() {
+    el('guideBox').classList.toggle('open');
   }
 
-  function syncPortToEncryption() {
-    const map = { starttls: 587, ssl: 465, none: 25 };
-    el('smtpPort').value = map[el('smtpSecure').value] || 587;
-  }
-
-  function getSmtpConfigFromUI() {
-    if (smtpProvider === 'brevo') {
-      return {
-        provider:  'brevo',
-        fromEmail: el('brevoFrom')?.value.trim() || '',
-        email:     el('brevoLogin')?.value.trim() || '',
-        password:  el('brevoKey')?.value.trim()   || '',
-      };
-    }
-    const cfg = {};
-    if (smtpProvider === 'gmail')     { cfg.provider = 'gmail'; }
-    if (smtpProvider === 'office365') { cfg.host = 'smtp.office365.com';      cfg.port = 587; cfg.secure = false; }
-    if (smtpProvider === 'outlook')   { cfg.host = 'smtp-mail.outlook.com';   cfg.port = 587; cfg.secure = false; }
-    if (smtpProvider === 'custom') {
-      cfg.host   = el('smtpHost')?.value.trim();
-      cfg.port   = parseInt(el('smtpPort')?.value) || 587;
-      cfg.secure = el('smtpSecure')?.value === 'ssl';
-    }
-    return cfg;
-  }
-
-  function getSenderInfo() {
-    if (smtpProvider === 'brevo') {
-      return {
-        email:     el('brevoLogin')?.value.trim() || '',
-        password:  el('brevoKey')?.value.trim()   || '',
-        fromEmail: el('brevoFrom')?.value.trim()  || '',
-      };
-    }
-    return {
-      email:    el('senderEmail')?.disabled ? '' : (el('senderEmail')?.value.trim() || ''),
-      password: el('senderPassword')?.disabled ? '' : (el('senderPassword')?.value.trim() || ''),
-    };
-  }
-
-  // ─── Test de connexion ─────────────────────────────────────────────────────
+  // ─── Test connexion ────────────────────────────────────────────────────────
   async function testConnection() {
-    const statusEl = el('connectionStatus');
-    statusEl.innerHTML = '<span style="color:#888;font-size:13px;">Vérification en cours…</span>';
-
-    const smtpCfg = getSmtpConfigFromUI();
-    const sender  = getSenderInfo();
-
-    if (smtpProvider === 'brevo') {
-      if (!sender.email || !sender.password) {
-        toast('Renseignez votre login et clé SMTP Brevo.', 'error');
-        statusEl.innerHTML = '';
-        return;
-      }
-    } else {
-      const emailOk = sender.email || el('senderEmail')?.disabled;
-      const pwdOk   = sender.password || el('senderPassword')?.disabled;
-      if (!emailOk || !pwdOk) {
-        toast('Renseignez email et mot de passe.', 'error');
-        statusEl.innerHTML = '';
-        return;
-      }
+    const email    = el('senderEmail').disabled  ? '' : v('senderEmail');
+    const password = el('senderPassword').disabled ? '' : v('senderPassword');
+    if (!email && !el('senderEmail').disabled) {
+      toast('Renseignez votre adresse email.', 'error'); return;
     }
-
+    el('connectionStatus').innerHTML = '<span style="color:#888;font-size:13px;">Vérification…</span>';
     try {
-      const res  = await post('/api/test-connection', {
-        email:      sender.email,
-        password:   sender.password,
-        smtpConfig: smtpCfg,
-      });
+      const res  = await post('/api/test-connection', { email, password });
       const data = await res.json();
-      statusEl.innerHTML = data.success
+      el('connectionStatus').innerHTML = data.success
         ? `<span class="tag-connected">✅ ${data.message}</span>`
-        : `<span style="color:#ea4335;font-size:13px;">❌ ${data.message}</span>`;
+        : `<span class="tag-error">❌ ${data.message}</span>`;
       if (!data.success && data.raw)
-        statusEl.innerHTML += `<details style="margin-top:4px;"><summary style="font-size:11px;color:#999;cursor:pointer;">Détail technique</summary><span style="font-size:11px;color:#999;word-break:break-all;">${data.raw}</span></details>`;
+        el('connectionStatus').innerHTML +=
+          `<details style="margin-top:4px;"><summary style="font-size:11px;color:#999;cursor:pointer;">Détail</summary>
+           <span style="font-size:11px;color:#999;">${data.raw}</span></details>`;
       toast(data.message, data.success ? 'success' : 'error');
     } catch {
-      statusEl.innerHTML = '<span style="color:#ea4335;font-size:13px;">❌ Serveur inaccessible</span>';
+      el('connectionStatus').innerHTML = '<span class="tag-error">❌ Serveur inaccessible</span>';
       toast('Impossible de contacter le serveur.', 'error');
     }
   }
 
-  // ─── Gestion emails tag-input ──────────────────────────────────────────────
+  // ─── Tag-input emails ──────────────────────────────────────────────────────
   function focusEmailInput() { el('emailInput').focus(); }
   function focusCcInput()    { el('ccInput').focus(); }
 
@@ -724,8 +557,7 @@
   function removeCc(i)    { currentCcs.splice(i, 1);    renderCcTags();    }
 
   function renderEmailTags() {
-    const box = el('emailsBox');
-    const input = el('emailInput');
+    const box = el('emailsBox'), input = el('emailInput');
     box.innerHTML = '';
     currentEmails.forEach((e, i) => {
       const chip = document.createElement('span');
@@ -736,8 +568,7 @@
     box.appendChild(input);
   }
   function renderCcTags() {
-    const box = el('ccBox');
-    const input = el('ccInput');
+    const box = el('ccBox'), input = el('ccInput');
     box.innerHTML = '';
     currentCcs.forEach((e, i) => {
       const chip = document.createElement('span');
@@ -748,20 +579,16 @@
     box.appendChild(input);
   }
 
-  // ─── Ajout / édition fournisseur ───────────────────────────────────────────
+  // ─── Fournisseurs ──────────────────────────────────────────────────────────
   function saveSupplier() {
-    addEmailFromInput();
-    addCcFromInput();
-
+    addEmailFromInput(); addCcFromInput();
     const nom  = v('fNom').trim();
     const eans = v('fEans').split(/[\n,;]+/).map(e => e.trim()).filter(Boolean);
-
-    if (!nom)              { toast('Le nom est obligatoire.', 'error'); return; }
-    if (!currentEmails.length) { toast('Ajoutez au moins une adresse email.', 'error'); return; }
-    if (!eans.length)      { toast('Ajoutez au moins un EAN.', 'error'); return; }
+    if (!nom)                   { toast('Le nom est obligatoire.', 'error'); return; }
+    if (!currentEmails.length)  { toast('Ajoutez au moins un email.', 'error'); return; }
+    if (!eans.length)           { toast('Ajoutez au moins un EAN.', 'error'); return; }
 
     const supplier = { nom_fournisseur: nom, emails: [...currentEmails], ccs: [...currentCcs], eans, status: 'pending' };
-
     if (editIndex >= 0) {
       supplier.status = suppliers[editIndex].status;
       suppliers[editIndex] = supplier;
@@ -770,10 +597,7 @@
       suppliers.push(supplier);
       toast(`${nom} ajouté.`, 'success');
     }
-
-    saveLocal();
-    renderTable();
-    cancelEdit();
+    saveLocal(); renderTable(); cancelEdit();
   }
 
   function editSupplier(i) {
@@ -783,52 +607,41 @@
     el('fEans').value = s.eans.join('\n');
     currentEmails = [...s.emails];
     currentCcs    = [...(s.ccs || [])];
-    renderEmailTags();
-    renderCcTags();
+    renderEmailTags(); renderCcTags();
     el('formTitle').textContent = '✏️ Modifier le fournisseur';
     el('formPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   function cancelEdit() {
     editIndex = -1;
-    el('fNom').value  = '';
-    el('fEans').value = '';
-    currentEmails = [];
-    currentCcs    = [];
-    renderEmailTags();
-    renderCcTags();
+    el('fNom').value = ''; el('fEans').value = '';
+    currentEmails = []; currentCcs = [];
+    renderEmailTags(); renderCcTags();
     el('formTitle').textContent = '➕ Nouveau fournisseur';
   }
 
   function removeSupplier(i) {
     if (!confirm(`Supprimer "${suppliers[i].nom_fournisseur}" ?`)) return;
-    suppliers.splice(i, 1);
-    saveLocal();
-    renderTable();
+    suppliers.splice(i, 1); saveLocal(); renderTable();
   }
 
   function clearAll() {
     if (!confirm('Effacer tous les fournisseurs ?')) return;
-    suppliers = [];
-    saveLocal();
-    renderTable();
+    suppliers = []; saveLocal(); renderTable();
   }
 
   // ─── Import fichier ────────────────────────────────────────────────────────
   function importFile(e) {
-    const file = e.target.files[0];
-    if (!file) return;
+    const file = e.target.files[0]; if (!file) return;
     const ext = file.name.split('.').pop().toLowerCase();
-    if (ext === 'xlsx' || ext === 'xls') importExcel(file);
-    else importCSV(file);
+    if (ext === 'xlsx' || ext === 'xls') importExcel(file); else importCSV(file);
   }
 
   function importExcel(file) {
     const reader = new FileReader();
     reader.onload = (e) => {
       const wb    = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
-      const sheet = wb.Sheets[wb.SheetNames[0]];
-      const rows  = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+      const rows  = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '' });
       let added = 0;
       for (const row of rows) {
         if (row.length < 2) continue;
@@ -838,13 +651,12 @@
         if (!nom || nom.toLowerCase().startsWith('nom') || !emailR) continue;
         const emails = emailR.split(/[,;]+/).map(e => e.trim()).filter(isEmail);
         const eans   = eanR.split(/[,;\s\n]+/).map(e => e.trim()).filter(Boolean);
-        if (nom && emails.length && eans.length) {
-          suppliers.push({ nom_fournisseur: nom, emails, ccs: [], eans, status: 'pending' });
-          added++;
+        if (emails.length && eans.length) {
+          suppliers.push({ nom_fournisseur: nom, emails, ccs: [], eans, status: 'pending' }); added++;
         }
       }
       saveLocal(); renderTable();
-      toast(`${added} fournisseur(s) importé(s) depuis Excel.`, 'success');
+      toast(`${added} fournisseur(s) importé(s).`, 'success');
     };
     reader.readAsArrayBuffer(file);
   }
@@ -858,12 +670,10 @@
         if (/nom.fournisseur|nom fournisseur/i.test(line)) continue;
         const parts  = line.split(/[;|]/).map(p => p.replace(/^"|"$/g, '').trim());
         if (parts.length < 2) continue;
-        const nom    = parts[0];
         const emails = parts[1].split(',').map(e => e.trim()).filter(isEmail);
         const eans   = (parts.slice(2).join(',') || '').split(/[,\s]+/).map(e => e.trim()).filter(Boolean);
-        if (nom && emails.length && eans.length) {
-          suppliers.push({ nom_fournisseur: nom, emails, ccs: [], eans, status: 'pending' });
-          added++;
+        if (parts[0] && emails.length && eans.length) {
+          suppliers.push({ nom_fournisseur: parts[0], emails, ccs: [], eans, status: 'pending' }); added++;
         }
       }
       saveLocal(); renderTable();
@@ -872,44 +682,31 @@
     reader.readAsText(file, 'UTF-8');
   }
 
-  // ─── Rendu tableau ─────────────────────────────────────────────────────────
+  // ─── Tableau ───────────────────────────────────────────────────────────────
   function renderTable() {
     const wrap = el('tableWrap');
-    if (!suppliers.length) { wrap.style.display = 'none'; return; }
+    if (!suppliers.length) { wrap.style.display = 'none'; updateRetryButton(); return; }
     wrap.style.display = 'block';
     el('supplierCount').textContent = `${suppliers.length} fournisseur(s)`;
-
     el('supplierBody').innerHTML = suppliers.map((s, i) => `
       <tr>
-        <td style="color:#aaa;font-weight:600;">${i + 1}</td>
+        <td style="color:#bbb;font-weight:700;font-size:12px;">${i + 1}</td>
         <td><strong>${s.nom_fournisseur}</strong></td>
-        <td>
-          <div class="email-chips">
-            ${s.emails.map(e => `<span class="chip chip-blue">${e}</span>`).join('')}
-          </div>
-        </td>
-        <td>
-          <div class="email-chips">
-            ${(s.ccs||[]).map(e => `<span class="chip chip-orange">${e}</span>`).join('') || '<span style="color:#ccc;font-size:12px;">—</span>'}
-          </div>
-        </td>
-        <td>
-          <div class="email-chips">
-            ${s.eans.slice(0,3).map(e => `<span class="chip chip-ean">${e}</span>`).join('')}
-            ${s.eans.length > 3 ? `<span class="chip chip-ean">+${s.eans.length - 3}</span>` : ''}
-          </div>
-        </td>
+        <td><div class="email-chips">${s.emails.map(e => `<span class="chip chip-blue">${e}</span>`).join('')}</div></td>
+        <td><div class="email-chips">${(s.ccs||[]).map(e => `<span class="chip chip-orange">${e}</span>`).join('') || '<span style="color:#ddd;font-size:12px;">—</span>'}</div></td>
+        <td><div class="email-chips">
+          ${s.eans.slice(0,3).map(e => `<span class="chip chip-ean">${e}</span>`).join('')}
+          ${s.eans.length > 3 ? `<span class="chip chip-ean">+${s.eans.length - 3}</span>` : ''}
+        </div></td>
         <td>${badge(s.status, s.error)}</td>
-        <td>
-          <div style="display:flex;gap:5px;flex-wrap:wrap;">
-            <button class="btn btn-secondary btn-sm" onclick="previewOne(${i})">👁</button>
-            <button class="btn btn-warning btn-sm"   onclick="sendOne(${i})">📤</button>
-            <button class="btn btn-secondary btn-sm" onclick="editSupplier(${i})">✏️</button>
-            <button class="btn btn-danger btn-sm"    onclick="removeSupplier(${i})">✕</button>
-          </div>
-        </td>
-      </tr>
-    `).join('');
+        <td><div style="display:flex;gap:5px;flex-wrap:wrap;">
+          <button class="btn btn-secondary btn-sm" onclick="previewOne(${i})">👁</button>
+          <button class="btn btn-warning btn-sm"   onclick="sendOne(${i})">📤</button>
+          <button class="btn btn-secondary btn-sm" onclick="editSupplier(${i})">✏️</button>
+          <button class="btn btn-danger btn-sm"    onclick="removeSupplier(${i})">✕</button>
+        </div></td>
+      </tr>`).join('');
+    updateRetryButton();
   }
 
   function badge(status, error) {
@@ -922,7 +719,7 @@
     return map[status] || '';
   }
 
-  // ─── Génération email ──────────────────────────────────────────────────────
+  // ─── Email généré ──────────────────────────────────────────────────────────
   function generateEmail(s) {
     const eanList = s.eans.map(e => `• ${e}`).join('\n');
     const subject = `${s.nom_fournisseur} Mise en ligne bloquée : fiches produits en attente de partage à finaliser pour Carrefour.fr dans Salsify`;
@@ -959,70 +756,62 @@ Excellente journée à vous.`;
 
   // ─── Prévisualisation ──────────────────────────────────────────────────────
   function previewOne(i) { previewIdx = i; showPreview(); }
-  function previewAll()  {
+  function previewAll() {
     if (!suppliers.length) { toast('Aucun fournisseur.', 'error'); return; }
     previewIdx = 0; showPreview();
   }
-
   function showPreview() {
     const s = suppliers[previewIdx];
     const { subject, body } = generateEmail(s);
     const total = suppliers.length;
     el('modalTitle').textContent = `Prévisualisation — ${s.nom_fournisseur}`;
-
     el('modalNav').innerHTML = total > 1 ? `
       <button class="btn btn-secondary btn-sm" onclick="navPrev()" ${previewIdx===0?'disabled':''}>◀</button>
-      <span style="font-size:13px;color:#666;">${previewIdx+1} / ${total}</span>
-      <button class="btn btn-secondary btn-sm" onclick="navNext()" ${previewIdx===total-1?'disabled':''}>▶</button>
-    ` : '';
-
+      <span style="font-size:13px;color:#888;">${previewIdx+1} / ${total}</span>
+      <button class="btn btn-secondary btn-sm" onclick="navNext()" ${previewIdx===total-1?'disabled':''}>▶</button>` : '';
     el('modalBody').innerHTML = `
-      <div class="pf"><label>Destinataires (To)</label>
-        <div class="val">${s.emails.join('\n')}</div></div>
+      <div class="pf"><label>Destinataires (To)</label><div class="val">${s.emails.join('\n')}</div></div>
       ${s.ccs?.length ? `<div class="pf"><label>CC</label><div class="val">${s.ccs.join('\n')}</div></div>` : ''}
       <div class="pf"><label>Objet</label><div class="val">${subject}</div></div>
-      <div class="pf"><label>Corps</label><div class="val">${body}</div></div>
-    `;
+      <div class="pf"><label>Corps</label><div class="val">${body}</div></div>`;
     el('modalOverlay').classList.add('open');
   }
-
   function navPrev() { previewIdx = Math.max(0, previewIdx - 1); showPreview(); }
   function navNext() { previewIdx = Math.min(suppliers.length - 1, previewIdx + 1); showPreview(); }
   function closeModal() { el('modalOverlay').classList.remove('open'); }
 
   // ─── Envoi ─────────────────────────────────────────────────────────────────
-  function checkSenderReady() {
-    const s = getSenderInfo();
-    if (smtpProvider === 'brevo') {
-      if (!s.email || !s.password) {
-        toast('Configurez le login et la clé Brevo dans Étape 1.', 'error'); return null;
-      }
-    } else {
-      const emailOk = s.email || el('senderEmail')?.disabled;
-      if (!emailOk) { toast('Configurez la connexion email dans Étape 1.', 'error'); return null; }
+  function getSender() {
+    return {
+      email:    el('senderEmail').disabled    ? '' : v('senderEmail'),
+      password: el('senderPassword').disabled ? '' : v('senderPassword'),
+    };
+  }
+
+  function checkReady() {
+    const s = getSender();
+    if (!s.email && !el('senderEmail').disabled) {
+      toast('Configurez votre email dans Étape 1.', 'error'); return null;
     }
     return s;
   }
 
   async function sendOne(i) {
-    const sender = checkSenderReady(); if (!sender) return;
-    suppliers[i].status = 'sending';
-    renderTable();
-    const result = await sendRequest(sender, [suppliers[i]]);
-    applyResults(result);
-    updateRetryButton();
+    const sender = checkReady(); if (!sender) return;
+    suppliers[i].status = 'sending'; renderTable();
+    const r = await sendRequest(sender, [suppliers[i]]);
+    applyResults(r);
   }
 
   async function sendAll() {
-    const sender = checkSenderReady(); if (!sender) return;
+    const sender = checkReady(); if (!sender) return;
     const pending = suppliers.filter(s => s.status !== 'success');
     if (!pending.length) { toast('Tous les emails ont déjà été envoyés.', 'success'); return; }
     if (!confirm(`Envoyer ${pending.length} email(s) ?`)) return;
 
     el('btnSend').disabled = true;
     suppliers.forEach(s => { if (s.status !== 'success') s.status = 'sending'; });
-    renderTable();
-    showProgress(0, pending.length);
+    renderTable(); showProgress(0, pending.length);
 
     const results = [];
     for (let idx = 0; idx < pending.length; idx++) {
@@ -1034,16 +823,14 @@ Excellente journée à vous.`;
 
     el('progressWrap').style.display = 'none';
     el('btnSend').disabled = false;
-    saveLocal();
-    renderTable();
-    updateRetryButton();
+    saveLocal(); renderTable();
 
     const ok  = results.filter(r => r.status === 'success').length;
     const err = results.filter(r => r.status === 'error').length;
     el('sendSummary').innerHTML = `
       <div class="summary-box ${err ? 'summary-err' : 'summary-ok'}">
         ✅ ${ok} email(s) envoyé(s) avec succès${err ? ` — ❌ ${err} erreur(s)` : ''}
-        ${err ? '<br><small>Corrigez la configuration SMTP puis cliquez sur <strong>Réessayer les erreurs</strong>.</small>' : ''}
+        ${err ? '<br><small>Vérifiez votre connexion puis cliquez <strong>Réessayer les erreurs</strong>.</small>' : ''}
       </div>`;
     toast(`${ok} email(s) envoyé(s).`, ok > 0 ? 'success' : 'error');
   }
@@ -1054,7 +841,6 @@ Excellente journée à vous.`;
     errors.forEach(s => { s.status = 'pending'; s.error = undefined; });
     saveLocal(); renderTable();
     toast(`${errors.length} fournisseur(s) remis en attente.`, 'success');
-    updateRetryButton();
     await sendAll();
   }
 
@@ -1065,18 +851,15 @@ Excellente journée à vous.`;
 
   async function sendRequest(sender, list) {
     try {
-      const smtpCfg = getSmtpConfigFromUI();
       const res  = await post('/api/send-emails', {
         senderEmail:    sender.email,
         senderPassword: sender.password,
-        fromEmail:      sender.fromEmail || '',
         suppliers:      list,
-        smtpConfig:     smtpCfg,
       });
       const data = await res.json();
       return data.results || [];
     } catch {
-      return list.map(s => ({ nom_fournisseur: s.nom_fournisseur, emails: s.emails, status: 'error', error: 'Erreur réseau — serveur inaccessible.' }));
+      return list.map(s => ({ nom_fournisseur: s.nom_fournisseur, emails: s.emails, status: 'error', error: 'Erreur réseau.' }));
     }
   }
 
@@ -1085,19 +868,23 @@ Excellente journée à vous.`;
     if (!suppliers.length) { toast('Aucune donnée à exporter.', 'error'); return; }
     const rows = [['Fournisseur','Emails','CC','EAN','Statut','Erreur']];
     suppliers.forEach(s => rows.push([
-      s.nom_fournisseur,
-      s.emails.join(' | '),
-      (s.ccs||[]).join(' | '),
-      s.eans.join(' | '),
-      s.status,
-      s.error || ''
+      s.nom_fournisseur, s.emails.join(' | '), (s.ccs||[]).join(' | '),
+      s.eans.join(' | '), s.status, s.error || ''
     ]));
-    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(';')).join('\r\n');
+    const csv  = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(';')).join('\r\n');
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
-    a.href = url; a.download = `salsify-resultats-${new Date().toISOString().slice(0,10)}.csv`;
+    a.href = url; a.download = `salsify-${new Date().toISOString().slice(0,10)}.csv`;
     a.click(); URL.revokeObjectURL(url);
+  }
+
+  // ─── Progress ──────────────────────────────────────────────────────────────
+  function showProgress(done, total) {
+    el('progressWrap').style.display = 'block';
+    const pct = Math.round((done / total) * 100);
+    el('progressBar').style.width = pct + '%';
+    el('progressLabel').textContent = `Envoi en cours… ${done} / ${total} (${pct}%)`;
   }
 
   function applyResults(results, save = true) {
@@ -1109,48 +896,36 @@ Excellente journée à vous.`;
     renderTable();
   }
 
-  function showProgress(done, total) {
-    const wrap = el('progressWrap');
-    wrap.style.display = 'block';
-    const pct = Math.round((done / total) * 100);
-    el('progressBar').style.width = pct + '%';
-    el('progressLabel').textContent = `Envoi en cours… ${done} / ${total} (${pct}%)`;
-  }
-
-  // ─── Persistence locale ────────────────────────────────────────────────────
+  // ─── Persistence ───────────────────────────────────────────────────────────
   function saveLocal() { localStorage.setItem('salsify_suppliers', JSON.stringify(suppliers)); }
 
   // ─── Utilitaires ──────────────────────────────────────────────────────────
-  function el(id) { return document.getElementById(id); }
-  function v(id)  { return el(id).value.trim(); }
+  function el(id)  { return document.getElementById(id); }
+  function v(id)   { return el(id).value.trim(); }
   function isEmail(s) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s); }
   function post(url, body) {
-    return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    return fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
   }
-
   function toast(msg, type = '') {
     const t = el('toast');
-    t.textContent = msg;
-    t.className = `toast ${type} show`;
+    t.textContent = msg; t.className = `toast ${type} show`;
     setTimeout(() => t.classList.remove('show'), 3500);
-  }
-
-  function showAppPasswordGuide() {
-    alert(`Comment obtenir un mot de passe d'application Google :\n\n1. Allez sur myaccount.google.com\n2. Sécurité → Validation en 2 étapes (doit être activée)\n3. Cherchez "Mots de passe des applications"\n4. Nom : "Email Salsify" → Créer\n5. Copiez le code à 16 caractères\n\n⚠️ Ce n'est pas votre mot de passe habituel.`);
   }
 
   // Drag & drop
   const zone = el('importZone');
   zone.addEventListener('dragover',  e => { e.preventDefault(); zone.style.borderColor = '#1a73e8'; });
-  zone.addEventListener('dragleave', () => zone.style.borderColor = '#c5d0e0');
+  zone.addEventListener('dragleave', () => zone.style.borderColor = '#d0d9e8');
   zone.addEventListener('drop', e => {
-    e.preventDefault(); zone.style.borderColor = '#c5d0e0';
+    e.preventDefault(); zone.style.borderColor = '#d0d9e8';
     const file = e.dataTransfer.files[0];
     if (file) importFile({ target: { files: [file] } });
   });
 
   // Fermer modal en cliquant dehors
-  el('modalOverlay').addEventListener('click', e => { if (e.target === el('modalOverlay')) closeModal(); });
+  el('modalOverlay').addEventListener('click', e => {
+    if (e.target === el('modalOverlay')) closeModal();
+  });
 </script>
 </body>
 </html>

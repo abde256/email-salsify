@@ -1,18 +1,18 @@
+'use strict';
 require('dotenv').config();
 
 const express    = require('express');
 const nodemailer = require('nodemailer');
 const session    = require('express-session');
 const path       = require('path');
-const https      = require('https');
 
 const app = express();
 
 // ─── Variables d'environnement ────────────────────────────────────────────────
 const APP_USERNAME    = process.env.APP_USERNAME    || 'admin';
 const APP_PASSWORD    = process.env.APP_PASSWORD    || 'salsify2024';
-const SENDER_EMAIL    = process.env.SENDER_EMAIL    || process.env.GMAIL_USER    || '';
-const SENDER_PASSWORD = process.env.SENDER_PASSWORD || process.env.GMAIL_PASSWORD || '';
+const SENDER_EMAIL    = process.env.SENDER_EMAIL    || process.env.GMAIL_USER     || '';
+const SENDER_PASSWORD = process.env.SENDER_PASSWORD || process.env.GMAIL_PASSWORD  || '';
 const SESSION_SECRET  = process.env.SESSION_SECRET  || 'salsify-secret-change-me';
 
 // ─── Middlewares ──────────────────────────────────────────────────────────────
@@ -61,124 +61,25 @@ app.post('/api/logout', (req, res) => {
 // ─── Protection ───────────────────────────────────────────────────────────────
 app.use(requireAuth);
 app.use(express.static(path.join(__dirname)));
-
 app.get('/', (_req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
-// ─── Détection SMTP automatique ───────────────────────────────────────────────
-function getSmtpConfig(email, password, custom = {}) {
-  const timeouts = {
+// ─── Gmail / Google Workspace — port 465 SSL (plus fiable que 587 STARTTLS) ──
+// Compatible avec tout domaine hébergé sur Google Workspace (ext.carrefour.com…)
+// Nécessite un mot de passe d'application Google (pas le mot de passe habituel).
+function createTransport(email, appPassword) {
+  return nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,                    // SSL direct — évite les blocages STARTTLS
+    auth: { user: email, pass: appPassword },
     connectionTimeout: 30_000,
-    greetingTimeout:   15_000,
-    socketTimeout:     45_000,
-  };
-
-  // 1) Brevo SMTP relay (recommandé — bypass toutes restrictions corporate)
-  if (custom.provider === 'brevo') {
-    return {
-      ...timeouts,
-      host: 'smtp-relay.brevo.com',
-      port: 587,
-      secure: false,
-      requireTLS: true,
-      auth: { user: email, pass: password },
-      tls: { rejectUnauthorized: false },
-    };
-  }
-
-  // 2) Config hôte explicite (UI personnalisée ou variables d'env)
-  const envHost = process.env.SMTP_HOST;
-  const host    = custom.host || envHost;
-  if (host) {
-    const port   = parseInt(custom.port   || process.env.SMTP_PORT   || '587');
-    const secure = (custom.secure === true || custom.secure === 'true' ||
-                    process.env.SMTP_SECURE === 'true');
-    return {
-      ...timeouts,
-      host, port, secure,
-      requireTLS: !secure,
-      auth: { user: email, pass: password },
-      tls: { rejectUnauthorized: false },
-    };
-  }
-
-  const domain = (email.split('@')[1] || '').toLowerCase();
-
-  // 3) Gmail / Google Workspace (gmail.com ET domaines perso hébergés sur Google)
-  if (custom.provider === 'gmail' || ['gmail.com', 'googlemail.com'].includes(domain)) {
-    return {
-      ...timeouts,
-      service: 'gmail',
-      auth: { user: email, pass: password },
-    };
-  }
-
-  // 4) Microsoft personnel
-  if (['outlook.com', 'hotmail.com', 'live.com', 'live.fr',
-       'outlook.fr', 'hotmail.fr', 'msn.com'].includes(domain)) {
-    return {
-      ...timeouts,
-      host: 'smtp-mail.outlook.com', port: 587, secure: false,
-      requireTLS: true,
-      auth: { user: email, pass: password },
-      tls: { rejectUnauthorized: false },
-    };
-  }
-
-  // 5) Défaut : Office 365 (utilisé par la majorité des entreprises — dont Carrefour)
-  return {
-    ...timeouts,
-    host: 'smtp.office365.com', port: 587, secure: false,
-    requireTLS: true,
-    auth: { user: email, pass: password },
-    tls: { rejectUnauthorized: false },
-  };
-}
-
-// ─── Brevo HTTP API (contourne tout blocage SMTP — utilise HTTPS port 443) ───
-function brevoRequest(method, path, apiKey, body) {
-  return new Promise((resolve, reject) => {
-    const payload = body ? JSON.stringify(body) : null;
-    const options = {
-      hostname: 'api.brevo.com',
-      port: 443,
-      path,
-      method,
-      headers: {
-        'api-key': apiKey,
-        'Content-Type': 'application/json',
-        ...(payload ? { 'Content-Length': Buffer.byteLength(payload) } : {}),
-      },
-    };
-    const req = https.request(options, (res) => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => {
-        if (res.statusCode >= 200 && res.statusCode < 300) {
-          resolve({ ok: true, status: res.statusCode, body: data });
-        } else {
-          reject(new Error(`Brevo API ${res.statusCode}: ${data}`));
-        }
-      });
-    });
-    req.setTimeout(30_000, () => { req.destroy(); reject(new Error('Brevo API timeout')); });
-    req.on('error', reject);
-    if (payload) req.write(payload);
-    req.end();
-  });
-}
-
-async function sendViaBrevoAPI(apiKey, fromEmail, toEmails, ccEmails, subject, textContent) {
-  await brevoRequest('POST', '/v3/smtp/email', apiKey, {
-    sender:      { email: fromEmail },
-    to:          toEmails.map(e => ({ email: e })),
-    cc:          ccEmails?.length ? ccEmails.map(e => ({ email: e })) : undefined,
-    subject,
-    textContent,
+    greetingTimeout:   20_000,
+    socketTimeout:     60_000,
   });
 }
 
 // ─── Envoi avec 3 tentatives (backoff exponentiel) ────────────────────────────
-async function sendMailWithRetry(transporter, mailOptions, maxAttempts = 3) {
+async function sendWithRetry(transporter, mailOptions, maxAttempts = 3) {
   let lastError;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
@@ -186,9 +87,7 @@ async function sendMailWithRetry(transporter, mailOptions, maxAttempts = 3) {
       return;
     } catch (err) {
       lastError = err;
-      if (attempt < maxAttempts) {
-        await new Promise(r => setTimeout(r, 2000 * attempt)); // 2s, 4s
-      }
+      if (attempt < maxAttempts) await new Promise(r => setTimeout(r, 2000 * attempt));
     }
   }
   throw lastError;
@@ -198,32 +97,23 @@ async function sendMailWithRetry(transporter, mailOptions, maxAttempts = 3) {
 function friendlyError(msg) {
   const m = msg || '';
   if (/ECONNREFUSED|ECONNRESET|ETIMEDOUT|timeout/i.test(m))
-    return 'Délai de connexion dépassé — vérifiez le serveur SMTP, le port, ou utilisez un mot de passe d\'application.';
+    return 'Délai de connexion dépassé — vérifiez votre mot de passe d\'application Google.';
   if (/authentication|credentials|invalid.*login|535|534|Username and Password not accepted/i.test(m))
-    return 'Authentification échouée — utilisez un mot de passe d\'application (pas votre mot de passe habituel).';
+    return 'Authentification échouée — utilisez un mot de passe d\'application Google (16 caractères).';
   if (/certificate|TLS|SSL/i.test(m))
-    return 'Erreur TLS/SSL — essayez de changer le port ou le type de chiffrement.';
+    return 'Erreur SSL — vérifiez que votre compte Google autorise l\'accès SMTP.';
   if (/ENOTFOUND|getaddrinfo/i.test(m))
-    return 'Serveur SMTP introuvable — vérifiez le nom d\'hôte SMTP.';
+    return 'Impossible de joindre smtp.gmail.com — vérifiez la connexion réseau du serveur.';
   if (/421|450|452/i.test(m))
-    return 'Serveur SMTP temporairement indisponible — réessayez dans quelques minutes.';
+    return 'Gmail temporairement indisponible — réessayez dans quelques minutes.';
   return m;
 }
 
 // ─── Config serveur ────────────────────────────────────────────────────────────
 app.get('/api/config', (_req, res) => {
-  const domain = (SENDER_EMAIL.split('@')[1] || '').toLowerCase();
-  let detectedProvider = 'office365';
-  if (['gmail.com', 'googlemail.com'].includes(domain)) detectedProvider = 'gmail';
-  else if (['outlook.com', 'hotmail.com', 'live.com', 'live.fr', 'outlook.fr', 'hotmail.fr'].includes(domain)) detectedProvider = 'outlook';
-  else if (process.env.SMTP_HOST) detectedProvider = 'custom';
-
   res.json({
     senderConfigured: !!(SENDER_EMAIL && SENDER_PASSWORD),
     senderEmail:      SENDER_EMAIL || '',
-    detectedProvider,
-    smtpHost: process.env.SMTP_HOST || '',
-    smtpPort: process.env.SMTP_PORT || '587',
   });
 });
 
@@ -231,32 +121,14 @@ app.get('/api/config', (_req, res) => {
 app.post('/api/test-connection', async (req, res) => {
   const email    = req.body.email    || SENDER_EMAIL;
   const password = req.body.password || SENDER_PASSWORD;
-  const custom   = req.body.smtpConfig || {};
 
   if (!email || !password)
     return res.status(400).json({ success: false, message: 'Email et mot de passe requis.' });
 
-  // Brevo : tester la clé API via GET /v3/account (HTTPS, jamais bloqué)
-  if (custom.provider === 'brevo') {
-    try {
-      await brevoRequest('GET', '/v3/account', password, null);
-      res.json({ success: true, message: 'Connexion Brevo réussie via API ✅' });
-    } catch (err) {
-      const msg = err.message.includes('401') || err.message.includes('403')
-        ? 'Clé API Brevo invalide — vérifiez la clé v3 dans Brevo → Paramètres → Clés API.'
-        : friendlyError(err.message);
-      res.status(400).json({ success: false, message: msg, raw: err.message });
-    }
-    return;
-  }
-
-  // SMTP standard
   try {
-    const config      = getSmtpConfig(email, password, custom);
-    const transporter = nodemailer.createTransport(config);
+    const transporter = createTransport(email, password);
     await transporter.verify();
-    const provider = config.service || config.host;
-    res.json({ success: true, message: `Connexion réussie via ${provider} ✅` });
+    res.json({ success: true, message: 'Connexion Gmail réussie ✅' });
   } catch (err) {
     res.status(400).json({ success: false, message: friendlyError(err.message), raw: err.message });
   }
@@ -264,20 +136,14 @@ app.post('/api/test-connection', async (req, res) => {
 
 // ─── Envoi des emails ─────────────────────────────────────────────────────────
 app.post('/api/send-emails', async (req, res) => {
-  const senderEmail    = req.body.senderEmail    || SENDER_EMAIL;
-  const senderPassword = req.body.senderPassword || SENDER_PASSWORD;
-  const custom         = req.body.smtpConfig     || {};
-  // Pour Brevo : fromEmail est l'adresse qui apparaît chez le destinataire
-  // senderEmail est le login Brevo (compte API), différent du from
-  const fromAddress    = req.body.fromEmail || senderEmail;
-  const { suppliers }  = req.body;
+  const email    = req.body.senderEmail    || SENDER_EMAIL;
+  const password = req.body.senderPassword || SENDER_PASSWORD;
+  const { suppliers } = req.body;
 
-  if (!senderEmail || !senderPassword || !suppliers?.length)
+  if (!email || !password || !suppliers?.length)
     return res.status(400).json({ success: false, message: 'Données manquantes.' });
 
-  const isBrevo     = custom.provider === 'brevo';
-  const config      = isBrevo ? null : getSmtpConfig(senderEmail, senderPassword, custom);
-  const transporter = isBrevo ? null : nodemailer.createTransport(config);
+  const transporter = createTransport(email, password);
   const results     = [];
 
   for (const supplier of suppliers) {
@@ -316,18 +182,13 @@ Merci par avance pour votre réactivité et votre collaboration.
 Excellente journée à vous.`;
 
     try {
-      if (isBrevo) {
-        // API HTTP Brevo — port 443, jamais bloqué par les hébergeurs cloud
-        await sendViaBrevoAPI(senderPassword, fromAddress, emails, ccs || [], subject, body);
-      } else {
-        await sendMailWithRetry(transporter, {
-          from:  fromAddress,
-          to:    emails.join(', '),
-          cc:    (ccs || []).length ? ccs.join(', ') : undefined,
-          subject,
-          text:  body,
-        });
-      }
+      await sendWithRetry(transporter, {
+        from:    email,
+        to:      emails.join(', '),
+        cc:      (ccs || []).length ? ccs.join(', ') : undefined,
+        subject,
+        text:    body,
+      });
       results.push({ nom_fournisseur, emails, status: 'success' });
     } catch (err) {
       results.push({ nom_fournisseur, emails, status: 'error', error: friendlyError(err.message) });
@@ -343,6 +204,5 @@ app.listen(PORT, () => {
   console.log(`\n✅ Serveur démarré sur http://localhost:${PORT}`);
   if (SENDER_EMAIL)  console.log(`   Email : ${SENDER_EMAIL}`);
   if (!SENDER_EMAIL) console.log(`   Email : à configurer dans l'interface`);
-  if (process.env.SMTP_HOST) console.log(`   SMTP  : ${process.env.SMTP_HOST}:${process.env.SMTP_PORT || 587}`);
-  console.log(`   Login : ${APP_USERNAME} / (mot de passe défini)\n`);
+  console.log(`   Login : ${APP_USERNAME}\n`);
 });
