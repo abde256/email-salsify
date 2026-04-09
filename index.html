@@ -311,20 +311,21 @@
             <input type="email" id="brevoLogin" placeholder="mon-compte@brevo.com" />
           </div>
           <div class="form-group">
-            <label>Clé SMTP Brevo</label>
-            <input type="password" id="brevoKey" placeholder="xsmtpsib-xxxxxxxxxxxx" />
-            <span class="hint">Différente de votre mot de passe — voir guide ci-dessous</span>
+            <label>Clé API v3 Brevo</label>
+            <input type="password" id="brevoKey" placeholder="xkeysib-xxxxxxxxxxxx" />
+            <span class="hint">Clé API v3 (pas la clé SMTP) — voir guide ci-dessous</span>
           </div>
         </div>
 
         <details class="brevo-guide">
           <summary>Obtenir une clé SMTP Brevo gratuitement (300 emails/jour)</summary>
           <ol>
-            <li>Créez un compte gratuit sur <a href="#" onclick="return false;" style="pointer-events:none;">brevo.com</a> (tapez l'URL dans votre navigateur)</li>
+            <li>Connectez-vous sur <strong>brevo.com</strong></li>
             <li>Allez dans <strong>Paramètres → Clés API SMTP &amp; API</strong></li>
-            <li>Cliquez <strong>"Créer une nouvelle clé SMTP"</strong> — copiez la clé</li>
-            <li>Dans <strong>Expéditeurs &amp; domaines → Expéditeurs</strong>, ajoutez votre email professionnel et validez le lien reçu</li>
-            <li>Entrez le tout dans les champs ci-dessus et testez la connexion</li>
+            <li>Section <strong>"Clés API"</strong> (pas "Clés SMTP") → cliquez <strong>"Générer une nouvelle clé API"</strong></li>
+            <li>Copiez la clé — elle commence par <code>xkeysib-</code></li>
+            <li>Dans <strong>Expéditeurs &amp; domaines → Expéditeurs</strong>, vérifiez que votre email professionnel est bien listé et vérifié</li>
+            <li>Entrez le tout ci-dessus et testez la connexion</li>
           </ol>
         </details>
       </div>

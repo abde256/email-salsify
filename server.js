@@ -4,6 +4,7 @@ const express    = require('express');
 const nodemailer = require('nodemailer');
 const session    = require('express-session');
 const path       = require('path');
+const https      = require('https');
 
 const app = express();
 
@@ -133,6 +134,49 @@ function getSmtpConfig(email, password, custom = {}) {
   };
 }
 
+// ─── Brevo HTTP API (contourne tout blocage SMTP — utilise HTTPS port 443) ───
+function brevoRequest(method, path, apiKey, body) {
+  return new Promise((resolve, reject) => {
+    const payload = body ? JSON.stringify(body) : null;
+    const options = {
+      hostname: 'api.brevo.com',
+      port: 443,
+      path,
+      method,
+      headers: {
+        'api-key': apiKey,
+        'Content-Type': 'application/json',
+        ...(payload ? { 'Content-Length': Buffer.byteLength(payload) } : {}),
+      },
+    };
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          resolve({ ok: true, status: res.statusCode, body: data });
+        } else {
+          reject(new Error(`Brevo API ${res.statusCode}: ${data}`));
+        }
+      });
+    });
+    req.setTimeout(30_000, () => { req.destroy(); reject(new Error('Brevo API timeout')); });
+    req.on('error', reject);
+    if (payload) req.write(payload);
+    req.end();
+  });
+}
+
+async function sendViaBrevoAPI(apiKey, fromEmail, toEmails, ccEmails, subject, textContent) {
+  await brevoRequest('POST', '/v3/smtp/email', apiKey, {
+    sender:      { email: fromEmail },
+    to:          toEmails.map(e => ({ email: e })),
+    cc:          ccEmails?.length ? ccEmails.map(e => ({ email: e })) : undefined,
+    subject,
+    textContent,
+  });
+}
+
 // ─── Envoi avec 3 tentatives (backoff exponentiel) ────────────────────────────
 async function sendMailWithRetry(transporter, mailOptions, maxAttempts = 3) {
   let lastError;
@@ -192,8 +236,23 @@ app.post('/api/test-connection', async (req, res) => {
   if (!email || !password)
     return res.status(400).json({ success: false, message: 'Email et mot de passe requis.' });
 
+  // Brevo : tester la clé API via GET /v3/account (HTTPS, jamais bloqué)
+  if (custom.provider === 'brevo') {
+    try {
+      await brevoRequest('GET', '/v3/account', password, null);
+      res.json({ success: true, message: 'Connexion Brevo réussie via API ✅' });
+    } catch (err) {
+      const msg = err.message.includes('401') || err.message.includes('403')
+        ? 'Clé API Brevo invalide — vérifiez la clé v3 dans Brevo → Paramètres → Clés API.'
+        : friendlyError(err.message);
+      res.status(400).json({ success: false, message: msg, raw: err.message });
+    }
+    return;
+  }
+
+  // SMTP standard
   try {
-    const config     = getSmtpConfig(email, password, custom);
+    const config      = getSmtpConfig(email, password, custom);
     const transporter = nodemailer.createTransport(config);
     await transporter.verify();
     const provider = config.service || config.host;
@@ -216,8 +275,9 @@ app.post('/api/send-emails', async (req, res) => {
   if (!senderEmail || !senderPassword || !suppliers?.length)
     return res.status(400).json({ success: false, message: 'Données manquantes.' });
 
-  const config      = getSmtpConfig(senderEmail, senderPassword, custom);
-  const transporter = nodemailer.createTransport(config);
+  const isBrevo     = custom.provider === 'brevo';
+  const config      = isBrevo ? null : getSmtpConfig(senderEmail, senderPassword, custom);
+  const transporter = isBrevo ? null : nodemailer.createTransport(config);
   const results     = [];
 
   for (const supplier of suppliers) {
@@ -256,13 +316,18 @@ Merci par avance pour votre réactivité et votre collaboration.
 Excellente journée à vous.`;
 
     try {
-      await sendMailWithRetry(transporter, {
-        from:    fromAddress,
-        to:      emails.join(', '),
-        cc:      (ccs || []).length ? ccs.join(', ') : undefined,
-        subject,
-        text: body,
-      });
+      if (isBrevo) {
+        // API HTTP Brevo — port 443, jamais bloqué par les hébergeurs cloud
+        await sendViaBrevoAPI(senderPassword, fromAddress, emails, ccs || [], subject, body);
+      } else {
+        await sendMailWithRetry(transporter, {
+          from:  fromAddress,
+          to:    emails.join(', '),
+          cc:    (ccs || []).length ? ccs.join(', ') : undefined,
+          subject,
+          text:  body,
+        });
+      }
       results.push({ nom_fournisseur, emails, status: 'success' });
     } catch (err) {
       results.push({ nom_fournisseur, emails, status: 'error', error: friendlyError(err.message) });
