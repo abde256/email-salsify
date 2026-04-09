@@ -525,6 +525,15 @@
   let previewIdx    = 0;
   let smtpProvider  = 'brevo'; // brevo | office365 | gmail | outlook | custom
 
+  // ─── SMTP Provider (déclaré avant l'init pour éviter la TDZ) ───────────────
+  const SMTP_INFO = {
+    brevo:     { label: 'smtp-relay.brevo.com:587 (relay dédié — recommandé)', activeClass: 'active-brevo' },
+    gmail:     { label: 'smtp.gmail.com:587 (Gmail — App Password requis)',     activeClass: 'active-gmail'  },
+    office365: { label: 'smtp.office365.com:587 (Microsoft 365)',               activeClass: 'active-o365'   },
+    outlook:   { label: 'smtp-mail.outlook.com:587 (Outlook.com personnel)',    activeClass: 'active'        },
+    custom:    { label: 'Serveur SMTP personnalisé',                            activeClass: 'active'        },
+  };
+
   // Init
   setSmtpProvider('brevo', true);
   renderTable();
@@ -556,14 +565,6 @@
   }
 
   // ─── SMTP Provider ─────────────────────────────────────────────────────────
-  const SMTP_INFO = {
-    brevo:     { label: 'smtp-relay.brevo.com:587 (relay dédié — recommandé)', activeClass: 'active-brevo' },
-    gmail:     { label: 'smtp.gmail.com:587 (Gmail — App Password requis)',     activeClass: 'active-gmail'  },
-    office365: { label: 'smtp.office365.com:587 (Microsoft 365)',               activeClass: 'active-o365'   },
-    outlook:   { label: 'smtp-mail.outlook.com:587 (Outlook.com personnel)',    activeClass: 'active'        },
-    custom:    { label: 'Serveur SMTP personnalisé',                            activeClass: 'active'        },
-  };
-
   function setSmtpProvider(p, silent = false) {
     smtpProvider = p;
 
