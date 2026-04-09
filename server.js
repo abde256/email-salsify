@@ -8,21 +8,21 @@ const path       = require('path');
 const app = express();
 
 // ─── Variables d'environnement ────────────────────────────────────────────────
-const APP_USERNAME     = process.env.APP_USERNAME     || 'admin';
-const APP_PASSWORD     = process.env.APP_PASSWORD     || 'salsify2024';
-const SENDER_EMAIL     = process.env.GMAIL_USER       || 'abderrahman_boubrahim@ext.carrefour.com';
-const SENDER_PASSWORD  = process.env.GMAIL_PASSWORD   || '';
-const SESSION_SECRET   = process.env.SESSION_SECRET   || 'salsify-secret-change-me';
+const APP_USERNAME    = process.env.APP_USERNAME    || 'admin';
+const APP_PASSWORD    = process.env.APP_PASSWORD    || 'salsify2024';
+const SENDER_EMAIL    = process.env.SENDER_EMAIL    || process.env.GMAIL_USER    || '';
+const SENDER_PASSWORD = process.env.SENDER_PASSWORD || process.env.GMAIL_PASSWORD || '';
+const SESSION_SECRET  = process.env.SESSION_SECRET  || 'salsify-secret-change-me';
 
 // ─── Middlewares ──────────────────────────────────────────────────────────────
-app.set('trust proxy', 1); // nécessaire derrière le proxy Render
+app.set('trust proxy', 1);
 app.use(express.json());
 app.use(session({
   secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
-    maxAge: 8 * 60 * 60 * 1000, // session 8h
+    maxAge: 8 * 60 * 60 * 1000,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax'
   }
@@ -57,33 +57,149 @@ app.post('/api/logout', (req, res) => {
   res.json({ success: true });
 });
 
-// ─── Protection de toutes les routes suivantes ────────────────────────────────
+// ─── Protection ───────────────────────────────────────────────────────────────
 app.use(requireAuth);
 app.use(express.static(path.join(__dirname)));
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
+app.get('/', (_req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
-// ─── Config serveur (email pré-configuré ?) ──────────────────────────────────
-app.get('/api/config', (req, res) => {
+// ─── Détection SMTP automatique ───────────────────────────────────────────────
+function getSmtpConfig(email, password, custom = {}) {
+  const timeouts = {
+    connectionTimeout: 30_000,
+    greetingTimeout:   15_000,
+    socketTimeout:     45_000,
+  };
+
+  // 1) Brevo SMTP relay (recommandé — bypass toutes restrictions corporate)
+  if (custom.provider === 'brevo') {
+    return {
+      ...timeouts,
+      host: 'smtp-relay.brevo.com',
+      port: 587,
+      secure: false,
+      requireTLS: true,
+      auth: { user: email, pass: password },
+      tls: { rejectUnauthorized: false },
+    };
+  }
+
+  // 2) Config hôte explicite (UI personnalisée ou variables d'env)
+  const envHost = process.env.SMTP_HOST;
+  const host    = custom.host || envHost;
+  if (host) {
+    const port   = parseInt(custom.port   || process.env.SMTP_PORT   || '587');
+    const secure = (custom.secure === true || custom.secure === 'true' ||
+                    process.env.SMTP_SECURE === 'true');
+    return {
+      ...timeouts,
+      host, port, secure,
+      requireTLS: !secure,
+      auth: { user: email, pass: password },
+      tls: { rejectUnauthorized: false },
+    };
+  }
+
+  const domain = (email.split('@')[1] || '').toLowerCase();
+
+  // 3) Gmail
+  if (['gmail.com', 'googlemail.com'].includes(domain)) {
+    return {
+      ...timeouts,
+      service: 'gmail',
+      auth: { user: email, pass: password },
+    };
+  }
+
+  // 4) Microsoft personnel
+  if (['outlook.com', 'hotmail.com', 'live.com', 'live.fr',
+       'outlook.fr', 'hotmail.fr', 'msn.com'].includes(domain)) {
+    return {
+      ...timeouts,
+      host: 'smtp-mail.outlook.com', port: 587, secure: false,
+      requireTLS: true,
+      auth: { user: email, pass: password },
+      tls: { rejectUnauthorized: false },
+    };
+  }
+
+  // 5) Défaut : Office 365 (utilisé par la majorité des entreprises — dont Carrefour)
+  return {
+    ...timeouts,
+    host: 'smtp.office365.com', port: 587, secure: false,
+    requireTLS: true,
+    auth: { user: email, pass: password },
+    tls: { rejectUnauthorized: false },
+  };
+}
+
+// ─── Envoi avec 3 tentatives (backoff exponentiel) ────────────────────────────
+async function sendMailWithRetry(transporter, mailOptions, maxAttempts = 3) {
+  let lastError;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      await transporter.sendMail(mailOptions);
+      return;
+    } catch (err) {
+      lastError = err;
+      if (attempt < maxAttempts) {
+        await new Promise(r => setTimeout(r, 2000 * attempt)); // 2s, 4s
+      }
+    }
+  }
+  throw lastError;
+}
+
+// ─── Message d'erreur convivial ────────────────────────────────────────────────
+function friendlyError(msg) {
+  const m = msg || '';
+  if (/ECONNREFUSED|ECONNRESET|ETIMEDOUT|timeout/i.test(m))
+    return 'Délai de connexion dépassé — vérifiez le serveur SMTP, le port, ou utilisez un mot de passe d\'application.';
+  if (/authentication|credentials|invalid.*login|535|534|Username and Password not accepted/i.test(m))
+    return 'Authentification échouée — utilisez un mot de passe d\'application (pas votre mot de passe habituel).';
+  if (/certificate|TLS|SSL/i.test(m))
+    return 'Erreur TLS/SSL — essayez de changer le port ou le type de chiffrement.';
+  if (/ENOTFOUND|getaddrinfo/i.test(m))
+    return 'Serveur SMTP introuvable — vérifiez le nom d\'hôte SMTP.';
+  if (/421|450|452/i.test(m))
+    return 'Serveur SMTP temporairement indisponible — réessayez dans quelques minutes.';
+  return m;
+}
+
+// ─── Config serveur ────────────────────────────────────────────────────────────
+app.get('/api/config', (_req, res) => {
+  const domain = (SENDER_EMAIL.split('@')[1] || '').toLowerCase();
+  let detectedProvider = 'office365';
+  if (['gmail.com', 'googlemail.com'].includes(domain)) detectedProvider = 'gmail';
+  else if (['outlook.com', 'hotmail.com', 'live.com', 'live.fr', 'outlook.fr', 'hotmail.fr'].includes(domain)) detectedProvider = 'outlook';
+  else if (process.env.SMTP_HOST) detectedProvider = 'custom';
+
   res.json({
-    gmailConfigured: !!(SENDER_EMAIL && SENDER_PASSWORD),
-    gmailUser: SENDER_EMAIL || ''
+    senderConfigured: !!(SENDER_EMAIL && SENDER_PASSWORD),
+    senderEmail:      SENDER_EMAIL || '',
+    detectedProvider,
+    smtpHost: process.env.SMTP_HOST || '',
+    smtpPort: process.env.SMTP_PORT || '587',
   });
 });
 
-// ─── Test connexion email ─────────────────────────────────────────────────────
+// ─── Test connexion ────────────────────────────────────────────────────────────
 app.post('/api/test-connection', async (req, res) => {
   const email    = req.body.email    || SENDER_EMAIL;
   const password = req.body.password || SENDER_PASSWORD;
-  if (!email || !password) return res.status(400).json({ success: false, message: 'Identifiants manquants.' });
+  const custom   = req.body.smtpConfig || {};
+
+  if (!email || !password)
+    return res.status(400).json({ success: false, message: 'Email et mot de passe requis.' });
+
   try {
-    const transporter = nodemailer.createTransport({ service: 'gmail', auth: { user: email, pass: password } });
+    const config     = getSmtpConfig(email, password, custom);
+    const transporter = nodemailer.createTransport(config);
     await transporter.verify();
-    res.json({ success: true, message: 'Connexion Gmail réussie ✅' });
+    const provider = config.service || config.host;
+    res.json({ success: true, message: `Connexion réussie via ${provider} ✅` });
   } catch (err) {
-    res.status(400).json({ success: false, message: 'Erreur de connexion : ' + err.message });
+    res.status(400).json({ success: false, message: friendlyError(err.message), raw: err.message });
   }
 });
 
@@ -91,14 +207,18 @@ app.post('/api/test-connection', async (req, res) => {
 app.post('/api/send-emails', async (req, res) => {
   const senderEmail    = req.body.senderEmail    || SENDER_EMAIL;
   const senderPassword = req.body.senderPassword || SENDER_PASSWORD;
+  const custom         = req.body.smtpConfig     || {};
+  // Pour Brevo : fromEmail est l'adresse qui apparaît chez le destinataire
+  // senderEmail est le login Brevo (compte API), différent du from
+  const fromAddress    = req.body.fromEmail || senderEmail;
   const { suppliers }  = req.body;
 
-  if (!senderEmail || !senderPassword || !suppliers?.length) {
+  if (!senderEmail || !senderPassword || !suppliers?.length)
     return res.status(400).json({ success: false, message: 'Données manquantes.' });
-  }
 
-  const transporter = nodemailer.createTransport({ service: 'gmail', auth: { user: senderEmail, pass: senderPassword } });
-  const results = [];
+  const config      = getSmtpConfig(senderEmail, senderPassword, custom);
+  const transporter = nodemailer.createTransport(config);
+  const results     = [];
 
   for (const supplier of suppliers) {
     const { nom_fournisseur, emails, ccs, eans } = supplier;
@@ -136,16 +256,16 @@ Merci par avance pour votre réactivité et votre collaboration.
 Excellente journée à vous.`;
 
     try {
-      await transporter.sendMail({
-        from: senderEmail,
-        to: emails.join(', '),
-        cc: (ccs || []).length ? ccs.join(', ') : undefined,
+      await sendMailWithRetry(transporter, {
+        from:    fromAddress,
+        to:      emails.join(', '),
+        cc:      (ccs || []).length ? ccs.join(', ') : undefined,
         subject,
-        text: body
+        text: body,
       });
       results.push({ nom_fournisseur, emails, status: 'success' });
     } catch (err) {
-      results.push({ nom_fournisseur, emails, status: 'error', error: err.message });
+      results.push({ nom_fournisseur, emails, status: 'error', error: friendlyError(err.message) });
     }
   }
 
@@ -156,7 +276,8 @@ Excellente journée à vous.`;
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`\n✅ Serveur démarré sur http://localhost:${PORT}`);
-  if (SENDER_EMAIL)  console.log(`   Email pré-configuré : ${SENDER_EMAIL}`);
+  if (SENDER_EMAIL)  console.log(`   Email : ${SENDER_EMAIL}`);
   if (!SENDER_EMAIL) console.log(`   Email : à configurer dans l'interface`);
+  if (process.env.SMTP_HOST) console.log(`   SMTP  : ${process.env.SMTP_HOST}:${process.env.SMTP_PORT || 587}`);
   console.log(`   Login : ${APP_USERNAME} / (mot de passe défini)\n`);
 });

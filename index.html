@@ -198,6 +198,64 @@
     .actions-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 16px; }
     .spacer { flex: 1; }
 
+    /* SMTP provider */
+    .smtp-section { margin-top: 18px; padding-top: 18px; border-top: 1.5px solid #e9ecef; }
+    .smtp-section > .section-title {
+      font-size: 12px; font-weight: 700; color: #555;
+      text-transform: uppercase; letter-spacing: .4px; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .smtp-provider-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+    .smtp-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 16px; border-radius: 22px; font-size: 12px; font-weight: 700;
+      border: 1.5px solid #dde1e7; background: #f8f9fa; color: #555;
+      cursor: pointer; transition: all .15s; user-select: none;
+    }
+    .smtp-pill.active          { background: #1a73e8; color: white; border-color: #1a73e8; }
+    .smtp-pill.active-brevo    { background: #7c3aed; color: white; border-color: #7c3aed; }
+    .smtp-pill.active-gmail    { background: #ea4335; color: white; border-color: #ea4335; }
+    .smtp-pill.active-o365     { background: #0078d4; color: white; border-color: #0078d4; }
+    .smtp-pill:hover:not(.active):not(.active-brevo):not(.active-gmail):not(.active-o365) { border-color: #1a73e8; color: #1a73e8; }
+
+    /* Brevo panel */
+    .brevo-panel {
+      background: #faf5ff; border: 1.5px solid #d8b4fe;
+      border-radius: 12px; padding: 18px 20px; margin-bottom: 4px;
+    }
+    .brevo-panel-title {
+      font-size: 13px; font-weight: 700; color: #7c3aed;
+      margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+    }
+    .brevo-guide {
+      background: white; border: 1px solid #e9d5ff; border-radius: 8px;
+      padding: 12px 16px; margin-top: 14px;
+    }
+    .brevo-guide summary {
+      cursor: pointer; font-size: 12px; font-weight: 700;
+      color: #7c3aed; list-style: none; display: flex; align-items: center; gap: 6px;
+    }
+    .brevo-guide summary::before { content: '▶'; font-size: 10px; transition: transform .2s; }
+    .brevo-guide[open] summary::before { transform: rotate(90deg); }
+    .brevo-guide ol { font-size: 12px; color: #555; margin-top: 10px; padding-left: 20px; line-height: 2; }
+    .brevo-guide ol a { color: #7c3aed; font-weight: 600; }
+
+    /* Warning panel */
+    .warn-panel {
+      background: #fffbeb; border: 1.5px solid #fcd34d;
+      border-radius: 10px; padding: 12px 16px; margin-top: 10px;
+      font-size: 12px; color: #92400e; line-height: 1.8;
+    }
+    .warn-panel strong { color: #78350f; }
+
+    /* Custom SMTP */
+    .custom-smtp-grid { display: flex; gap: 12px; flex-wrap: wrap; }
+    .custom-smtp-grid .form-group { min-width: 140px; }
+
+    /* Info pill */
+    .smtp-info { font-size: 12px; color: #888; margin-top: 6px; display: flex; align-items: center; gap: 5px; }
+    .smtp-info strong { color: #444; }
+
     @media (max-width: 640px) {
       .form-row { flex-direction: column; }
       .modal { padding: 18px; }
@@ -221,20 +279,117 @@
 
   <!-- ── ÉTAPE 1 : Connexion Email ─────────────────────────────────────────── -->
   <div class="card">
-    <h2>⚙️ Étape 1 — Connexion Email professionnel</h2>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Adresse email professionnelle</label>
-        <input type="email" id="senderEmail" value="abderrahman_boubrahim@ext.carrefour.com" placeholder="prenom.nom@ext.carrefour.com" />
-      </div>
-      <div class="form-group">
-        <label>Mot de passe</label>
-        <input type="password" id="senderPassword" placeholder="Votre mot de passe" />
+    <h2>⚙️ Étape 1 — Configuration de l'envoi</h2>
+
+    <!-- Sélecteur méthode d'envoi (en premier) -->
+    <div class="smtp-section" style="margin-top:0;padding-top:0;border-top:none;margin-bottom:20px;">
+      <div class="section-title">Méthode d'envoi</div>
+      <div class="smtp-provider-bar">
+        <span class="smtp-pill" id="pill-brevo"    onclick="setSmtpProvider('brevo')">🟣 Brevo — Recommandé</span>
+        <span class="smtp-pill" id="pill-office365" onclick="setSmtpProvider('office365')">🔵 Office 365</span>
+        <span class="smtp-pill" id="pill-gmail"    onclick="setSmtpProvider('gmail')">🔴 Gmail</span>
+        <span class="smtp-pill" id="pill-outlook"  onclick="setSmtpProvider('outlook')">📧 Outlook.com</span>
+        <span class="smtp-pill" id="pill-custom"   onclick="setSmtpProvider('custom')">⚙️ Personnalisé</span>
       </div>
     </div>
-    <div style="display:flex;align-items:center;gap:14px;margin-top:4px;">
-      <button class="btn btn-secondary" onclick="testConnection()">🔌 Tester la connexion</button>
-      <span id="connectionStatus"></span>
+
+    <!-- ─ Panel Brevo ─────────────────────────────────── -->
+    <div id="panelBrevo" style="display:none;">
+      <div class="brevo-panel">
+        <div class="brevo-panel-title">🚀 Envoi via Brevo (relay dédié — fonctionne depuis n'importe quel serveur cloud)</div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Email expéditeur — affiché dans les emails reçus</label>
+            <input type="email" id="brevoFrom"  placeholder="abderrahman_boubrahim@ext.carrefour.com" />
+            <span class="hint">L'adresse qui apparaîtra comme expéditeur chez le fournisseur</span>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Login Brevo (votre email de compte Brevo)</label>
+            <input type="email" id="brevoLogin" placeholder="mon-compte@brevo.com" />
+          </div>
+          <div class="form-group">
+            <label>Clé SMTP Brevo</label>
+            <input type="password" id="brevoKey" placeholder="xsmtpsib-xxxxxxxxxxxx" />
+            <span class="hint">Différente de votre mot de passe — voir guide ci-dessous</span>
+          </div>
+        </div>
+
+        <details class="brevo-guide">
+          <summary>Obtenir une clé SMTP Brevo gratuitement (300 emails/jour)</summary>
+          <ol>
+            <li>Créez un compte gratuit sur <a href="#" onclick="return false;" style="pointer-events:none;">brevo.com</a> (tapez l'URL dans votre navigateur)</li>
+            <li>Allez dans <strong>Paramètres → Clés API SMTP &amp; API</strong></li>
+            <li>Cliquez <strong>"Créer une nouvelle clé SMTP"</strong> — copiez la clé</li>
+            <li>Dans <strong>Expéditeurs &amp; domaines → Expéditeurs</strong>, ajoutez votre email professionnel et validez le lien reçu</li>
+            <li>Entrez le tout dans les champs ci-dessus et testez la connexion</li>
+          </ol>
+        </details>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:14px;margin-top:14px;">
+        <button class="btn btn-secondary" onclick="testConnection()">🔌 Tester la connexion Brevo</button>
+        <span id="connectionStatus"></span>
+      </div>
+    </div>
+
+    <!-- ─ Panel SMTP standard (Office 365 / Gmail / Outlook / Custom) ──── -->
+    <div id="panelStandard" style="display:none;">
+      <div class="form-row">
+        <div class="form-group">
+          <label id="labelEmail">Adresse email</label>
+          <input type="email" id="senderEmail" placeholder="prenom.nom@ext.carrefour.com" />
+        </div>
+        <div class="form-group">
+          <label id="labelPassword">Mot de passe</label>
+          <input type="password" id="senderPassword" placeholder="Votre mot de passe" />
+          <span class="hint" id="hintPassword"></span>
+        </div>
+      </div>
+
+      <!-- Avertissement Office 365 -->
+      <div class="warn-panel" id="warnO365" style="display:none;">
+        ⚠️ <strong>Office 365 / Exchange — Authentification SMTP basique</strong><br>
+        Microsoft désactive progressivement cette méthode pour les comptes corporate. Si vous obtenez une erreur de connexion, votre admin IT doit activer <em>"SMTP AUTH"</em> sur votre boîte mail, ou utilisez <strong>Brevo</strong> (recommandé, sans restriction).
+      </div>
+
+      <!-- Avertissement Gmail -->
+      <div class="warn-panel" id="warnGmail" style="display:none;">
+        ⚠️ <strong>Gmail — Mot de passe d'application requis</strong><br>
+        Google bloque les connexions avec votre mot de passe habituel. Vous devez utiliser un <em>"Mot de passe d'application"</em> :<br>
+        <strong>myaccount.google.com → Sécurité → Validation en 2 étapes → Mots de passe des applications</strong>
+      </div>
+
+      <!-- Champs SMTP personnalisé -->
+      <div id="customSmtpFields" style="display:none;margin-top:12px;">
+        <div class="custom-smtp-grid">
+          <div class="form-group" style="flex:2;min-width:200px;">
+            <label>Hôte SMTP</label>
+            <input type="text" id="smtpHost" placeholder="smtp.monentreprise.com" />
+          </div>
+          <div class="form-group" style="max-width:110px;">
+            <label>Port</label>
+            <input type="number" id="smtpPort" value="587" min="1" max="65535" />
+          </div>
+          <div class="form-group" style="max-width:160px;">
+            <label>Chiffrement</label>
+            <select id="smtpSecure" onchange="syncPortToEncryption()">
+              <option value="starttls">STARTTLS (587)</option>
+              <option value="ssl">SSL/TLS (465)</option>
+              <option value="none">Aucun (25)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="smtp-info" id="smtpInfoLabel" style="margin-top:10px;"></div>
+
+      <div style="display:flex;align-items:center;gap:14px;margin-top:14px;">
+        <button class="btn btn-secondary" onclick="testConnection()">🔌 Tester la connexion</button>
+        <span id="connectionStatus"></span>
+      </div>
     </div>
   </div>
 
@@ -324,6 +479,9 @@
     <div class="actions-bar">
       <button class="btn btn-secondary" onclick="previewAll()">👁️ Prévisualiser</button>
       <button class="btn btn-success" id="btnSend" onclick="sendAll()">📤 Envoyer tous les emails</button>
+      <button class="btn btn-warning" id="btnRetry" onclick="retryErrors()" style="display:none;">🔄 Réessayer les erreurs</button>
+      <div class="spacer"></div>
+      <button class="btn btn-secondary" onclick="exportCSV()">⬇️ Exporter résultats CSV</button>
     </div>
 
     <!-- Barre de progression -->
@@ -360,13 +518,15 @@
 
 <script>
   // ─── État ──────────────────────────────────────────────────────────────────
-  let suppliers = JSON.parse(localStorage.getItem('salsify_suppliers') || '[]');
-  let editIndex = -1;
+  let suppliers     = JSON.parse(localStorage.getItem('salsify_suppliers') || '[]');
+  let editIndex     = -1;
   let currentEmails = [];
   let currentCcs    = [];
   let previewIdx    = 0;
+  let smtpProvider  = 'brevo'; // brevo | office365 | gmail | outlook | custom
 
   // Init
+  setSmtpProvider('brevo', true);
   renderTable();
   checkServerConfig();
 
@@ -374,11 +534,16 @@
     try {
       const res  = await fetch('/api/config');
       const data = await res.json();
-      if (data.gmailConfigured) {
-        el('senderEmail').value = data.gmailUser;
-        el('senderEmail').disabled = true;
-        el('senderPassword').value = '••••••••••••••••';
-        el('senderPassword').disabled = true;
+      if (data.senderConfigured) {
+        // Pré-remplir email standard si configuré côté serveur
+        if (el('senderEmail')) {
+          el('senderEmail').value    = data.senderEmail;
+          el('senderEmail').disabled = true;
+        }
+        if (el('senderPassword')) {
+          el('senderPassword').value    = '••••••••••••••••';
+          el('senderPassword').disabled = true;
+        }
         el('connectionStatus').innerHTML = '<span class="tag-connected">✅ Email configuré via serveur</span>';
         toast('Email pré-configuré côté serveur.', 'success');
       }
@@ -390,20 +555,133 @@
     window.location.href = '/login';
   }
 
-  // ─── Connexion Gmail ───────────────────────────────────────────────────────
+  // ─── SMTP Provider ─────────────────────────────────────────────────────────
+  const SMTP_INFO = {
+    brevo:     { label: 'smtp-relay.brevo.com:587 (relay dédié — recommandé)', activeClass: 'active-brevo' },
+    gmail:     { label: 'smtp.gmail.com:587 (Gmail — App Password requis)',     activeClass: 'active-gmail'  },
+    office365: { label: 'smtp.office365.com:587 (Microsoft 365)',               activeClass: 'active-o365'   },
+    outlook:   { label: 'smtp-mail.outlook.com:587 (Outlook.com personnel)',    activeClass: 'active'        },
+    custom:    { label: 'Serveur SMTP personnalisé',                            activeClass: 'active'        },
+  };
+
+  function setSmtpProvider(p, silent = false) {
+    smtpProvider = p;
+
+    // Mettre à jour les pills
+    ['brevo','office365','gmail','outlook','custom'].forEach(id => {
+      const pill = el('pill-' + id);
+      if (!pill) return;
+      pill.className = 'smtp-pill' + (id === p ? ' ' + SMTP_INFO[p].activeClass : '');
+    });
+
+    // Afficher le bon panel
+    const isBrevo = (p === 'brevo');
+    el('panelBrevo').style.display    = isBrevo ? 'block' : 'none';
+    el('panelStandard').style.display = isBrevo ? 'none'  : 'block';
+
+    if (!isBrevo) {
+      // Champs spéciaux selon provider
+      el('customSmtpFields').style.display = (p === 'custom') ? 'block' : 'none';
+      el('warnO365')?.style && (el('warnO365').style.display  = (p === 'office365') ? 'block' : 'none');
+      el('warnGmail')?.style && (el('warnGmail').style.display = (p === 'gmail')     ? 'block' : 'none');
+
+      // Labels dynamiques
+      const labels = { gmail: 'Email Gmail', office365: 'Email professionnel (Microsoft 365)', outlook: 'Email Outlook.com', custom: 'Email' };
+      const hints  = { gmail: 'Utilisez un mot de passe d\'application Google, pas votre mot de passe habituel', office365: 'Votre mot de passe professionnel (SMTP AUTH doit être activé par l\'admin)', outlook: 'Votre mot de passe Outlook.com' };
+      if (el('labelEmail'))    el('labelEmail').textContent    = labels[p] || 'Email';
+      if (el('labelPassword')) el('labelPassword').textContent = 'Mot de passe';
+      if (el('hintPassword'))  el('hintPassword').textContent  = hints[p]  || '';
+
+      // Info serveur
+      if (el('smtpInfoLabel'))
+        el('smtpInfoLabel').innerHTML = `<span>Serveur :</span> <strong>${SMTP_INFO[p]?.label || ''}</strong>`;
+    }
+
+    // Enregistrer le choix
+    localStorage.setItem('salsify_smtp_provider', p);
+  }
+
+  function syncPortToEncryption() {
+    const map = { starttls: 587, ssl: 465, none: 25 };
+    el('smtpPort').value = map[el('smtpSecure').value] || 587;
+  }
+
+  function getSmtpConfigFromUI() {
+    if (smtpProvider === 'brevo') {
+      return {
+        provider:  'brevo',
+        fromEmail: el('brevoFrom')?.value.trim() || '',
+        email:     el('brevoLogin')?.value.trim() || '',
+        password:  el('brevoKey')?.value.trim()   || '',
+      };
+    }
+    const cfg = {};
+    if (smtpProvider === 'gmail')     { cfg.host = 'smtp.gmail.com';          cfg.port = 587; cfg.secure = false; }
+    if (smtpProvider === 'office365') { cfg.host = 'smtp.office365.com';      cfg.port = 587; cfg.secure = false; }
+    if (smtpProvider === 'outlook')   { cfg.host = 'smtp-mail.outlook.com';   cfg.port = 587; cfg.secure = false; }
+    if (smtpProvider === 'custom') {
+      cfg.host   = el('smtpHost')?.value.trim();
+      cfg.port   = parseInt(el('smtpPort')?.value) || 587;
+      cfg.secure = el('smtpSecure')?.value === 'ssl';
+    }
+    return cfg;
+  }
+
+  function getSenderInfo() {
+    if (smtpProvider === 'brevo') {
+      return {
+        email:     el('brevoLogin')?.value.trim() || '',
+        password:  el('brevoKey')?.value.trim()   || '',
+        fromEmail: el('brevoFrom')?.value.trim()  || '',
+      };
+    }
+    return {
+      email:    el('senderEmail')?.disabled ? '' : (el('senderEmail')?.value.trim() || ''),
+      password: el('senderPassword')?.disabled ? '' : (el('senderPassword')?.value.trim() || ''),
+    };
+  }
+
+  // ─── Test de connexion ─────────────────────────────────────────────────────
   async function testConnection() {
-    const email    = v('senderEmail');
-    const password = v('senderPassword');
-    if (!email || !password) { toast('Renseignez email et mot de passe.', 'error'); return; }
-    el('connectionStatus').innerHTML = '<span style="color:#888;font-size:13px;">Vérification…</span>';
+    const statusEl = el('connectionStatus');
+    statusEl.innerHTML = '<span style="color:#888;font-size:13px;">Vérification en cours…</span>';
+
+    const smtpCfg = getSmtpConfigFromUI();
+    const sender  = getSenderInfo();
+
+    if (smtpProvider === 'brevo') {
+      if (!sender.email || !sender.password) {
+        toast('Renseignez votre login et clé SMTP Brevo.', 'error');
+        statusEl.innerHTML = '';
+        return;
+      }
+    } else {
+      const emailOk = sender.email || el('senderEmail')?.disabled;
+      const pwdOk   = sender.password || el('senderPassword')?.disabled;
+      if (!emailOk || !pwdOk) {
+        toast('Renseignez email et mot de passe.', 'error');
+        statusEl.innerHTML = '';
+        return;
+      }
+    }
+
     try {
-      const res  = await post('/api/test-connection', { email, password });
+      const res  = await post('/api/test-connection', {
+        email:      sender.email,
+        password:   sender.password,
+        smtpConfig: smtpCfg,
+      });
       const data = await res.json();
-      el('connectionStatus').innerHTML = data.success
+      statusEl.innerHTML = data.success
         ? `<span class="tag-connected">✅ ${data.message}</span>`
         : `<span style="color:#ea4335;font-size:13px;">❌ ${data.message}</span>`;
+      if (!data.success && data.raw)
+        statusEl.innerHTML += `<details style="margin-top:4px;"><summary style="font-size:11px;color:#999;cursor:pointer;">Détail technique</summary><span style="font-size:11px;color:#999;word-break:break-all;">${data.raw}</span></details>`;
       toast(data.message, data.success ? 'success' : 'error');
-    } catch { toast('Impossible de contacter le serveur.', 'error'); }
+    } catch {
+      statusEl.innerHTML = '<span style="color:#ea4335;font-size:13px;">❌ Serveur inaccessible</span>';
+      toast('Impossible de contacter le serveur.', 'error');
+    }
   }
 
   // ─── Gestion emails tag-input ──────────────────────────────────────────────
@@ -711,27 +989,30 @@ Excellente journée à vous.`;
   function closeModal() { el('modalOverlay').classList.remove('open'); }
 
   // ─── Envoi ─────────────────────────────────────────────────────────────────
-  function getSenderCredentials() {
-    const emailDisabled = el('senderEmail').disabled;
-    const pwdDisabled   = el('senderPassword').disabled;
-    return {
-      sEmail: emailDisabled ? '' : v('senderEmail'),
-      sPwd:   pwdDisabled   ? '' : v('senderPassword')
-    };
+  function checkSenderReady() {
+    const s = getSenderInfo();
+    if (smtpProvider === 'brevo') {
+      if (!s.email || !s.password) {
+        toast('Configurez le login et la clé Brevo dans Étape 1.', 'error'); return null;
+      }
+    } else {
+      const emailOk = s.email || el('senderEmail')?.disabled;
+      if (!emailOk) { toast('Configurez la connexion email dans Étape 1.', 'error'); return null; }
+    }
+    return s;
   }
 
   async function sendOne(i) {
-    const { sEmail, sPwd } = getSenderCredentials();
-    if (!sEmail && !el('senderEmail').disabled) { toast('Configurez la connexion Gmail d\'abord.', 'error'); return; }
+    const sender = checkSenderReady(); if (!sender) return;
     suppliers[i].status = 'sending';
     renderTable();
-    const result = await sendRequest(sEmail, sPwd, [suppliers[i]]);
+    const result = await sendRequest(sender, [suppliers[i]]);
     applyResults(result);
+    updateRetryButton();
   }
 
   async function sendAll() {
-    const { sEmail, sPwd } = getSenderCredentials();
-    if (!sEmail && !el('senderEmail').disabled) { toast('Configurez la connexion Gmail d\'abord.', 'error'); return; }
+    const sender = checkSenderReady(); if (!sender) return;
     const pending = suppliers.filter(s => s.status !== 'success');
     if (!pending.length) { toast('Tous les emails ont déjà été envoyés.', 'success'); return; }
     if (!confirm(`Envoyer ${pending.length} email(s) ?`)) return;
@@ -739,13 +1020,11 @@ Excellente journée à vous.`;
     el('btnSend').disabled = true;
     suppliers.forEach(s => { if (s.status !== 'success') s.status = 'sending'; });
     renderTable();
-
-    // Barre de progression
     showProgress(0, pending.length);
 
     const results = [];
     for (let idx = 0; idx < pending.length; idx++) {
-      const r = await sendRequest(sEmail, sPwd, [pending[idx]]);
+      const r = await sendRequest(sender, [pending[idx]]);
       results.push(...(r || []));
       applyResults(r, false);
       showProgress(idx + 1, pending.length);
@@ -755,23 +1034,68 @@ Excellente journée à vous.`;
     el('btnSend').disabled = false;
     saveLocal();
     renderTable();
+    updateRetryButton();
 
     const ok  = results.filter(r => r.status === 'success').length;
     const err = results.filter(r => r.status === 'error').length;
     el('sendSummary').innerHTML = `
       <div class="summary-box ${err ? 'summary-err' : 'summary-ok'}">
         ✅ ${ok} email(s) envoyé(s) avec succès${err ? ` — ❌ ${err} erreur(s)` : ''}
-        ${err ? '<br><small>Vérifiez les lignes en erreur dans le tableau.</small>' : ''}
+        ${err ? '<br><small>Corrigez la configuration SMTP puis cliquez sur <strong>Réessayer les erreurs</strong>.</small>' : ''}
       </div>`;
     toast(`${ok} email(s) envoyé(s).`, ok > 0 ? 'success' : 'error');
   }
 
-  async function sendRequest(sEmail, sPwd, list) {
+  async function retryErrors() {
+    const errors = suppliers.filter(s => s.status === 'error');
+    if (!errors.length) { toast('Aucune erreur à réessayer.', 'success'); return; }
+    errors.forEach(s => { s.status = 'pending'; s.error = undefined; });
+    saveLocal(); renderTable();
+    toast(`${errors.length} fournisseur(s) remis en attente.`, 'success');
+    updateRetryButton();
+    await sendAll();
+  }
+
+  function updateRetryButton() {
+    const hasErrors = suppliers.some(s => s.status === 'error');
+    el('btnRetry').style.display = hasErrors ? 'inline-flex' : 'none';
+  }
+
+  async function sendRequest(sender, list) {
     try {
-      const res  = await post('/api/send-emails', { senderEmail: sEmail, senderPassword: sPwd, suppliers: list });
+      const smtpCfg = getSmtpConfigFromUI();
+      const res  = await post('/api/send-emails', {
+        senderEmail:    sender.email,
+        senderPassword: sender.password,
+        fromEmail:      sender.fromEmail || '',
+        suppliers:      list,
+        smtpConfig:     smtpCfg,
+      });
       const data = await res.json();
       return data.results || [];
-    } catch { return list.map(s => ({ nom_fournisseur: s.nom_fournisseur, emails: s.emails, status: 'error', error: 'Erreur réseau' })); }
+    } catch {
+      return list.map(s => ({ nom_fournisseur: s.nom_fournisseur, emails: s.emails, status: 'error', error: 'Erreur réseau — serveur inaccessible.' }));
+    }
+  }
+
+  // ─── Export CSV ────────────────────────────────────────────────────────────
+  function exportCSV() {
+    if (!suppliers.length) { toast('Aucune donnée à exporter.', 'error'); return; }
+    const rows = [['Fournisseur','Emails','CC','EAN','Statut','Erreur']];
+    suppliers.forEach(s => rows.push([
+      s.nom_fournisseur,
+      s.emails.join(' | '),
+      (s.ccs||[]).join(' | '),
+      s.eans.join(' | '),
+      s.status,
+      s.error || ''
+    ]));
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(';')).join('\r\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = `salsify-resultats-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
   }
 
   function applyResults(results, save = true) {

@@ -1,7 +1,7 @@
 {
   "name": "email-sender-salsify",
   "version": "1.0.0",
-  "description": "Envoi automatique d'emails fournisseurs Salsify via Gmail",
+  "description": "Envoi automatique d'emails fournisseurs Salsify (Office 365 / Gmail)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
