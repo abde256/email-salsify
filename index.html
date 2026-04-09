@@ -618,7 +618,7 @@
       };
     }
     const cfg = {};
-    if (smtpProvider === 'gmail')     { cfg.host = 'smtp.gmail.com';          cfg.port = 587; cfg.secure = false; }
+    if (smtpProvider === 'gmail')     { cfg.provider = 'gmail'; }
     if (smtpProvider === 'office365') { cfg.host = 'smtp.office365.com';      cfg.port = 587; cfg.secure = false; }
     if (smtpProvider === 'outlook')   { cfg.host = 'smtp-mail.outlook.com';   cfg.port = 587; cfg.secure = false; }
     if (smtpProvider === 'custom') {

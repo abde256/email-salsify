@@ -103,8 +103,8 @@ function getSmtpConfig(email, password, custom = {}) {
 
   const domain = (email.split('@')[1] || '').toLowerCase();
 
-  // 3) Gmail
-  if (['gmail.com', 'googlemail.com'].includes(domain)) {
+  // 3) Gmail / Google Workspace (gmail.com ET domaines perso hébergés sur Google)
+  if (custom.provider === 'gmail' || ['gmail.com', 'googlemail.com'].includes(domain)) {
     return {
       ...timeouts,
       service: 'gmail',
