@@ -261,6 +261,24 @@
     }
     .modal-footer { display: flex; justify-content: flex-end; margin-top: 20px; }
 
+    /* ── Relances badge ── */
+    .relance-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: #ede9fe; color: #5b21b6;
+      border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 700;
+      cursor: pointer; border: none; transition: background .15s;
+    }
+    .relance-badge:hover { background: #ddd6fe; }
+    .relance-timeline { display: flex; flex-direction: column; gap: 12px; }
+    .relance-entry {
+      background: #f8f9fa; border-radius: 10px;
+      padding: 12px 16px; border-left: 3px solid #7c3aed;
+    }
+    .relance-entry-header {
+      font-size: 12px; font-weight: 700; color: #5b21b6; margin-bottom: 8px;
+    }
+    .relance-eans { display: flex; flex-wrap: wrap; gap: 4px; }
+
     /* ── Actions bar ── */
     .actions-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 18px; }
     .spacer { flex: 1; }
@@ -407,6 +425,7 @@
               <th>CC</th>
               <th>EAN</th>
               <th>Statut</th>
+              <th>Relances</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -450,6 +469,20 @@
     <div id="modalBody"></div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal()">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal historique relances -->
+<div class="modal-overlay" id="relancesOverlay">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header">
+      <h3 id="relancesTitle">Historique des relances</h3>
+      <button class="modal-close" onclick="closeRelances()">✕</button>
+    </div>
+    <div id="relancesBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeRelances()">Fermer</button>
     </div>
   </div>
 </div>
@@ -588,9 +621,10 @@
     if (!currentEmails.length)  { toast('Ajoutez au moins un email.', 'error'); return; }
     if (!eans.length)           { toast('Ajoutez au moins un EAN.', 'error'); return; }
 
-    const supplier = { nom_fournisseur: nom, emails: [...currentEmails], ccs: [...currentCcs], eans, status: 'pending' };
+    const supplier = { nom_fournisseur: nom, emails: [...currentEmails], ccs: [...currentCcs], eans, status: 'pending', relances: [] };
     if (editIndex >= 0) {
-      supplier.status = suppliers[editIndex].status;
+      supplier.status   = suppliers[editIndex].status;
+      supplier.relances = suppliers[editIndex].relances || [];
       suppliers[editIndex] = supplier;
       toast(`${nom} mis à jour.`, 'success');
     } else {
@@ -644,7 +678,7 @@
       emails.forEach(e => { if (!existing.emails.includes(e)) existing.emails.push(e); });
       eans.forEach(e => { if (!existing.eans.includes(e)) existing.eans.push(e); });
     } else {
-      map.set(key, { nom_fournisseur: nom, emails: [...emails], ccs: [], eans: [...eans], status: 'pending' });
+      map.set(key, { nom_fournisseur: nom, emails: [...emails], ccs: [], eans: [...eans], status: 'pending', relances: [] });
     }
   }
 
@@ -710,6 +744,7 @@
           ${s.eans.length > 3 ? `<span class="chip chip-ean">+${s.eans.length - 3}</span>` : ''}
         </div></td>
         <td>${badge(s.status, s.error)}</td>
+        <td>${relanceBadge(s, i)}</td>
         <td><div style="display:flex;gap:5px;flex-wrap:wrap;">
           <button class="btn btn-secondary btn-sm" onclick="previewOne(${i})">👁</button>
           <button class="btn btn-warning btn-sm"   onclick="sendOne(${i})">📤</button>
@@ -719,6 +754,35 @@
       </tr>`).join('');
     updateRetryButton();
   }
+
+  function relanceBadge(s, i) {
+    const count = (s.relances || []).length;
+    if (!count) return '<span style="color:#ddd;font-size:12px;">—</span>';
+    return `<button class="relance-badge" onclick="showRelancesHistory(${i})">🔁 ${count}x relancé</button>`;
+  }
+
+  function showRelancesHistory(i) {
+    const s = suppliers[i];
+    const relances = s.relances || [];
+    el('relancesTitle').textContent = `Relances — ${s.nom_fournisseur}`;
+    el('relancesBody').innerHTML = `
+      <p style="font-size:13px;color:#888;margin-bottom:16px;">${relances.length} relance(s) effectuée(s)</p>
+      <div class="relance-timeline">
+        ${relances.map((r, idx) => `
+          <div class="relance-entry">
+            <div class="relance-entry-header">
+              Relance #${idx + 1} — ${new Date(r.date).toLocaleString('fr-FR', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' })}
+            </div>
+            <div style="font-size:11px;color:#888;margin-bottom:6px;">${r.eans.length} EAN envoyé(s)</div>
+            <div class="relance-eans">
+              ${r.eans.map(e => `<span class="chip chip-ean">${e}</span>`).join('')}
+            </div>
+          </div>`).join('')}
+      </div>`;
+    el('relancesOverlay').classList.add('open');
+  }
+
+  function closeRelances() { el('relancesOverlay').classList.remove('open'); }
 
   function badge(status, error) {
     const map = {
@@ -901,7 +965,13 @@ Excellente journée à vous.`;
   function applyResults(results, save = true) {
     (results || []).forEach(r => {
       const s = suppliers.find(s => s.nom_fournisseur === r.nom_fournisseur);
-      if (s) { s.status = r.status; s.error = r.error; }
+      if (!s) return;
+      s.status = r.status;
+      s.error  = r.error;
+      if (r.status === 'success') {
+        if (!s.relances) s.relances = [];
+        s.relances.push({ date: new Date().toISOString(), eans: [...s.eans] });
+      }
     });
     if (save) saveLocal();
     renderTable();
@@ -933,9 +1003,12 @@ Excellente journée à vous.`;
     if (file) importFile({ target: { files: [file] } });
   });
 
-  // Fermer modal en cliquant dehors
+  // Fermer modals en cliquant dehors
   el('modalOverlay').addEventListener('click', e => {
     if (e.target === el('modalOverlay')) closeModal();
+  });
+  el('relancesOverlay').addEventListener('click', e => {
+    if (e.target === el('relancesOverlay')) closeRelances();
   });
 </script>
 </body>
