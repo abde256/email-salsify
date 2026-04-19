@@ -637,12 +637,23 @@
     if (ext === 'xlsx' || ext === 'xls') importExcel(file); else importCSV(file);
   }
 
+  function mergeIntoMap(map, nom, emails, eans) {
+    const key = nom.toLowerCase();
+    if (map.has(key)) {
+      const existing = map.get(key);
+      emails.forEach(e => { if (!existing.emails.includes(e)) existing.emails.push(e); });
+      eans.forEach(e => { if (!existing.eans.includes(e)) existing.eans.push(e); });
+    } else {
+      map.set(key, { nom_fournisseur: nom, emails: [...emails], ccs: [], eans: [...eans], status: 'pending' });
+    }
+  }
+
   function importExcel(file) {
     const reader = new FileReader();
     reader.onload = (e) => {
       const wb    = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
       const rows  = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '' });
-      let added = 0;
+      const map   = new Map();
       for (const row of rows) {
         if (row.length < 2) continue;
         const nom    = String(row[0]).trim();
@@ -651,12 +662,12 @@
         if (!nom || nom.toLowerCase().startsWith('nom') || !emailR) continue;
         const emails = emailR.split(/[,;]+/).map(e => e.trim()).filter(isEmail);
         const eans   = eanR.split(/[,;\s\n]+/).map(e => e.trim()).filter(Boolean);
-        if (emails.length && eans.length) {
-          suppliers.push({ nom_fournisseur: nom, emails, ccs: [], eans, status: 'pending' }); added++;
-        }
+        if (emails.length && eans.length) mergeIntoMap(map, nom, emails, eans);
       }
+      const newSuppliers = [...map.values()];
+      suppliers.push(...newSuppliers);
       saveLocal(); renderTable();
-      toast(`${added} fournisseur(s) importé(s).`, 'success');
+      toast(`${newSuppliers.length} fournisseur(s) importé(s) (lignes regroupées).`, 'success');
     };
     reader.readAsArrayBuffer(file);
   }
@@ -665,19 +676,19 @@
     const reader = new FileReader();
     reader.onload = (e) => {
       const lines = e.target.result.split('\n').filter(l => l.trim());
-      let added = 0;
+      const map   = new Map();
       for (const line of lines) {
         if (/nom.fournisseur|nom fournisseur/i.test(line)) continue;
         const parts  = line.split(/[;|]/).map(p => p.replace(/^"|"$/g, '').trim());
         if (parts.length < 2) continue;
         const emails = parts[1].split(',').map(e => e.trim()).filter(isEmail);
         const eans   = (parts.slice(2).join(',') || '').split(/[,\s]+/).map(e => e.trim()).filter(Boolean);
-        if (parts[0] && emails.length && eans.length) {
-          suppliers.push({ nom_fournisseur: parts[0], emails, ccs: [], eans, status: 'pending' }); added++;
-        }
+        if (parts[0] && emails.length && eans.length) mergeIntoMap(map, parts[0], emails, eans);
       }
+      const newSuppliers = [...map.values()];
+      suppliers.push(...newSuppliers);
       saveLocal(); renderTable();
-      toast(`${added} fournisseur(s) importé(s).`, 'success');
+      toast(`${newSuppliers.length} fournisseur(s) importé(s) (lignes regroupées).`, 'success');
     };
     reader.readAsText(file, 'UTF-8');
   }
